@@ -8,12 +8,13 @@ export function generateStaticParams() {
   }))
 }
 
-export default function CollectionPage({ params }: { params: { category: string } }) {
-  const collection = collections.find((c) => c.id === params.category)
+export default async function CollectionPage({ params }: { params: Promise<{ category: string }> }) {
+  const { category } = await params
+  const collection = collections.find((c) => c.id === category)
 
   if (!collection) {
     notFound()
   }
 
-  return <CollectionView category={params.category} collectionName={collection.name} />
+  return <CollectionView category={category} collectionName={collection.name} />
 }
