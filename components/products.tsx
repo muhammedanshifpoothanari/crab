@@ -1,16 +1,37 @@
 "use client"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ShoppingCart, Star, Heart } from "lucide-react"
+import { ShoppingCart, Star, Heart, RefreshCw } from "lucide-react"
 import Image from "next/image"
 import { useCart } from "@/lib/cart-context"
 import Link from "next/link"
-import { allProducts } from "@/lib/product-data"
-
-const featuredProducts = allProducts.slice(0, 6)
+import type { Product } from "@/lib/product-data"
 
 export function Products() {
   const { addToCart } = useCart()
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProducts(data)
+        } else {
+          console.error("Non-array data received:", data)
+          setProducts([])
+        }
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error("Failed to load storefront products:", err)
+        setLoading(false)
+      })
+  }, [])
+
+  const featuredProducts = products.slice(0, 6)
 
   return (
     <section id="products" className="py-24 md:py-32 bg-background">
@@ -28,8 +49,14 @@ export function Products() {
           </p>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredProducts.map((product) => (
+        {loading ? (
+          <div className="py-20 flex flex-col items-center justify-center gap-4 text-center w-full">
+            <RefreshCw className="h-8 w-8 text-primary animate-spin" />
+            <p className="text-sm text-muted-foreground font-semibold">Loading standard collectibles...</p>
+          </div>
+        ) : (
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredProducts.map((product) => (
             <Card
               key={product.id}
               className="group overflow-hidden border-0 shadow-sm hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 flex flex-col bg-card"
@@ -87,6 +114,7 @@ export function Products() {
             </Card>
           ))}
         </div>
+      )}
 
         <div className="mt-20 text-center">
           <Link href="/#categories">

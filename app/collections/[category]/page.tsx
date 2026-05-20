@@ -2,11 +2,7 @@ import { CollectionView } from "@/components/collection-view"
 import { collections } from "@/lib/product-data"
 import { notFound } from "next/navigation"
 
-export function generateStaticParams() {
-  return collections.map((collection) => ({
-    category: collection.id,
-  }))
-}
+export const dynamic = "force-dynamic"
 
 export default async function CollectionPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params

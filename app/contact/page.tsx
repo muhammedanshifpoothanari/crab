@@ -118,10 +118,10 @@ export default function ContactPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold mb-2">Phone</h3>
                     <a
-                      href="tel:+918921284021"
+                      href="tel:+919400757707"
                       className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
-                      +91 89212 84021
+                      +91 94007 57707
                     </a>
                   </div>
                 </div>
@@ -135,10 +135,10 @@ export default function ContactPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold mb-2">Email</h3>
                     <a
-                      href="mailto:hello@crabscart.com"
+                      href="mailto:crabsown@gmail.com"
                       className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
-                      hello@crabscart.com
+                      crabsown@gmail.com
                     </a>
                   </div>
                 </div>
@@ -151,7 +151,7 @@ export default function ContactPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold mb-2">Location</h3>
-                    <p className="text-sm text-muted-foreground">Mumbai, Maharashtra, India</p>
+                    <p className="text-sm text-muted-foreground">Karunagappally, Kerala, India</p>
                   </div>
                 </div>
               </Card>
@@ -164,12 +164,12 @@ export default function ContactPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold mb-2">Social</h3>
                     <a
-                      href="https://instagram.com"
+                      href="https://instagram.com/crabsown"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
-                      @crabscart
+                      @crabsown
                     </a>
                   </div>
                 </div>

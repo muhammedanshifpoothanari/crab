@@ -1,18 +1,38 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ShoppingCart, ArrowLeft } from "lucide-react"
+import { ShoppingCart, ArrowLeft, RefreshCw } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCart } from "@/lib/cart-context"
-import { getProductsByCategory } from "@/lib/product-data"
+import type { Product } from "@/lib/product-data"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 
 export function CollectionView({ category, collectionName }: { category: string; collectionName: string }) {
   const { addToCart } = useCart()
-  const products = getProductsByCategory(category)
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProducts(data.filter((p) => p.category === category))
+        } else {
+          console.error("Non-array data received:", data)
+          setProducts([])
+        }
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error("Failed to load collection products:", err)
+        setLoading(false)
+      })
+  }, [category])
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,8 +50,14 @@ export function CollectionView({ category, collectionName }: { category: string;
           <p className="text-muted-foreground text-lg">{products.length} unique designs available</p>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {products.map((product) => (
+        {loading ? (
+          <div className="py-20 flex flex-col items-center justify-center gap-4 text-center w-full">
+            <RefreshCw className="h-8 w-8 text-primary animate-spin" />
+            <p className="text-sm text-muted-foreground font-semibold">Loading collection...</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {products.map((product) => (
             <Card key={product.id} className="group overflow-hidden border-border hover:shadow-lg transition-all">
               <Link href={`/product/${product.id}`}>
                 <div className="relative aspect-square overflow-hidden bg-muted cursor-pointer">
@@ -70,6 +96,7 @@ export function CollectionView({ category, collectionName }: { category: string;
             </Card>
           ))}
         </div>
+      )}
       </div>
         <Footer />
     </div>

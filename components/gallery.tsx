@@ -4,14 +4,14 @@ import Image from "next/image"
 import { useState } from "react"
 
 const galleryImages = [
-  "/custom-figurine-1.jpg",
-  "/custom-figurine-2.jpg",
-  "/custom-figurine-3.jpg",
-  "/custom-figurine-4.jpg",
-  "/custom-figurine-5.jpg",
-  "/placeholder.svg?height=400&width=400",
-  "/placeholder.svg?height=400&width=400",
-  "/placeholder.svg?height=400&width=400",
+  "/cat_family_1779270658181.png",
+  "/cat_wedding_1779270641603.png",
+  "/cat_with_pets_1779269677237.png",
+  "/cat_with_vehicles_1779269693510.png",
+  "/cat_sports_1779269598558.png",
+  "/cat_music_1779269650586.png",
+  "/cat_professionals_1779270624718.png",
+  "/cat_superheroes_1779270608522.png",
 ]
 
 export function Gallery() {

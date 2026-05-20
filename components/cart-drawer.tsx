@@ -6,9 +6,36 @@ import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+
+import { useState } from "react"
 
 export function CartDrawer() {
-  const { items, removeFromCart, updateQuantity, total, itemCount, clearCart } = useCart()
+  const {
+    items,
+    removeFromCart,
+    updateQuantity,
+    subtotal,
+    total,
+    discount,
+    discountPercentage,
+    itemCount,
+    clearCart,
+    promoCode,
+    applyPromoCode,
+    whatsappCheckoutEnabled,
+    adminWhatsAppNumber,
+  } = useCart()
+
+  const [couponInput, setCouponInput] = useState("")
+
+  const handleApplyCoupon = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (couponInput.trim()) {
+      applyPromoCode(couponInput)
+      setCouponInput("")
+    }
+  }
 
   return (
     <Sheet>
@@ -36,7 +63,25 @@ export function CartDrawer() {
           </div>
         ) : (
           <div className="flex flex-col h-[calc(100vh-120px)]">
-            <div className="flex-1 overflow-y-auto py-6">
+            <div className="flex-1 overflow-y-auto py-6 px-2">
+              {/* Dynamic Combo deals motivator */}
+              <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-primary/10 via-accent/5 to-primary/5 border border-primary/20">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Bundle Savings Deal</p>
+                {itemCount === 1 ? (
+                  <p className="text-sm text-foreground">
+                    Buy <span className="font-bold text-accent">1 more product</span> to instantly unlock a <strong>10% Combo Discount!</strong>
+                  </p>
+                ) : itemCount === 2 ? (
+                  <p className="text-sm text-foreground">
+                    🎉 <strong>10% Combo Discount active!</strong> Add <span className="font-bold text-accent">1 more product</span> to hit <strong>15% off!</strong>
+                  </p>
+                ) : (
+                  <p className="text-sm text-emerald-500 font-medium">
+                    🎉 <strong>15% Super Combo Discount active!</strong> Awesome savings unlocked!
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-4 border-b pb-4">
@@ -83,15 +128,69 @@ export function CartDrawer() {
               </div>
             </div>
 
-            <div className="border-t pt-4 space-y-4">
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total:</span>
-                <span>₹{total}</span>
+            {/* Promo Coupon Form & Totals */}
+            <div className="border-t pt-4 space-y-4 px-2">
+              <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Coupon Code (COMBO20)"
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value)}
+                  className="flex-1 px-3 py-1.5 text-sm bg-secondary/50 border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary focus:border-transparent placeholder:text-muted-foreground/60"
+                />
+                <Button type="submit" variant="secondary" className="h-9">
+                  Apply Code
+                </Button>
+              </form>
+
+              {promoCode && (
+                <div className="text-xs text-emerald-500 font-semibold flex items-center gap-1.5">
+                  <Badge variant="outline" className="text-emerald-500 border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5">
+                    {promoCode}
+                  </Badge>
+                  Applied successfully!
+                </div>
+              )}
+
+              <div className="space-y-2 border-t pt-3">
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Subtotal:</span>
+                  <span>₹{subtotal}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-emerald-500 font-semibold">
+                    <span>Combo Discount ({discountPercentage}%):</span>
+                    <span>-₹{discount}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold border-t pt-2">
+                  <span>Total:</span>
+                  <span>₹{total}</span>
+                </div>
               </div>
-              <Button className="w-full" size="lg">
-                Proceed to Checkout
-              </Button>
-              <Button variant="outline" className="w-full bg-transparent" onClick={clearCart}>
+
+              {whatsappCheckoutEnabled ? (
+                <Button 
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12" 
+                  size="lg"
+                  onClick={() => {
+                    const itemsSummary = items.map(item => `${item.quantity}x ${item.name} (₹${item.price} each)`).join(", ")
+                    const message = encodeURIComponent(`Hi! I'd like to place an order for the following items in my cart: [ ${itemsSummary} ]. Total Amount: ₹${total}. Please let me know how to complete my payment!`)
+                    window.open(`https://wa.me/${adminWhatsAppNumber}?text=${message}`, "_blank")
+                  }}
+                >
+                  Checkout via WhatsApp 💬
+                </Button>
+              ) : (
+                <SheetTrigger asChild>
+                  <Link href="/checkout" className="w-full">
+                    <Button className="w-full" size="lg">
+                      Proceed to Checkout
+                    </Button>
+                  </Link>
+                </SheetTrigger>
+              )}
+              <Button variant="outline" className="w-full bg-transparent text-muted-foreground" onClick={clearCart}>
                 Clear Cart
               </Button>
             </div>

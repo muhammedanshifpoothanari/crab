@@ -1,19 +1,33 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Search } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { allProducts } from "@/lib/product-data"
+import type { Product } from "@/lib/product-data"
 
 export function SearchDialog() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [products, setProducts] = useState<Product[]>([])
 
-  const filteredProducts = allProducts.filter(
+  useEffect(() => {
+    if (open) {
+      fetch("/api/products")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setProducts(data)
+          }
+        })
+        .catch((err) => console.error("Search product fetch failed:", err))
+    }
+  }, [open])
+
+  const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(query.toLowerCase()) ||
       product.description.toLowerCase().includes(query.toLowerCase()) ||

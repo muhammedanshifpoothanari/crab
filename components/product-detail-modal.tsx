@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { ShoppingCart, Star } from "lucide-react"
 import Image from "next/image"
 import { useCart } from "@/lib/cart-context"
+import { useRouter } from "next/navigation"
 
 interface Product {
   id: number
@@ -23,7 +24,8 @@ interface ProductDetailModalProps {
 }
 
 export function ProductDetailModal({ product, open, onOpenChange }: ProductDetailModalProps) {
-  const { addToCart } = useCart()
+  const { addToCart, whatsappCheckoutEnabled, adminWhatsAppNumber } = useCart()
+  const router = useRouter()
 
   if (!product) return null
 
@@ -32,6 +34,24 @@ export function ProductDetailModal({ product, open, onOpenChange }: ProductDetai
   const handleAddToCart = () => {
     addToCart(product)
     onOpenChange(false)
+  }
+
+  const handleBuyItNow = () => {
+    if (whatsappCheckoutEnabled) {
+      const message = encodeURIComponent(`Hi! I am interested in purchasing ${product.name} (₹${product.price}) from CrabsCart. Please help me complete the order!`)
+      window.open(`https://wa.me/${adminWhatsAppNumber}?text=${message}`, "_blank")
+      onOpenChange(false)
+      return
+    }
+    const savedPhone = typeof window !== "undefined" ? localStorage.getItem("customer_phone") : null
+    if (!savedPhone) {
+      addToCart(product)
+      onOpenChange(false)
+      return
+    }
+    addToCart(product)
+    onOpenChange(false)
+    router.push("/checkout")
   }
 
   return (
@@ -82,10 +102,24 @@ export function ProductDetailModal({ product, open, onOpenChange }: ProductDetai
               </div>
             </div>
 
-            <Button size="lg" className="w-full gap-2 mt-auto" onClick={handleAddToCart}>
-              <ShoppingCart className="h-4 w-4" />
-              Add to Cart
-            </Button>
+            <div className="flex flex-col gap-2 mt-auto">
+              <Button size="lg" className="w-full gap-2" onClick={handleAddToCart}>
+                <ShoppingCart className="h-4 w-4" />
+                Add to Cart
+              </Button>
+              <Button
+                variant={whatsappCheckoutEnabled ? "default" : "outline"}
+                size="lg"
+                className={`w-full font-bold uppercase tracking-wider transition-all duration-300 ${
+                  whatsappCheckoutEnabled 
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-lg shadow-emerald-600/20" 
+                    : "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow"
+                }`}
+                onClick={handleBuyItNow}
+              >
+                {whatsappCheckoutEnabled ? "Order via WhatsApp 💬" : "Buy It Now"}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

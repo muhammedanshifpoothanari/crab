@@ -3,9 +3,9 @@
 import { Card } from "@/components/ui/card"
 import { Users, Heart, Sparkles, Trophy, Briefcase, Zap, Music, Plane, Car, Dumbbell } from "lucide-react"
 import Link from "next/link"
-import { collections } from "@/lib/product-data"
-import { allProducts } from "@/lib/product-data"
 import Image from "next/image"
+import { useState, useEffect } from "react"
+import type { Product } from "@/lib/product-data"
 
 const iconMap: Record<string, any> = {
   Heart,
@@ -21,8 +21,33 @@ const iconMap: Record<string, any> = {
 }
 
 export function Categories() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [collections, setCollections] = useState<{ id: string; name: string; icon: string; count: number }[]>([])
+
+  useEffect(() => {
+    // Fetch products
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProducts(data)
+        }
+      })
+      .catch((err) => console.error("Categories product fetch failed:", err))
+
+    // Fetch collections
+    fetch("/api/collections")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCollections(data)
+        }
+      })
+      .catch((err) => console.error("Collections fetch failed:", err))
+  }, [])
+
   const getCollectionImage = (collectionId: string) => {
-    const product = allProducts.find((p) => p.category === collectionId)
+    const product = products.find((p) => p.category === collectionId)
     return product?.image || "/placeholder.svg?height=600&width=800"
   }
 
