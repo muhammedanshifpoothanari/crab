@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   ChevronUp,
   ChevronDown,
+  MonitorPlay,
 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
@@ -76,11 +77,19 @@ interface Collection {
   count: number
 }
 
+interface Banner {
+  id: string
+  image: string
+  link: string
+  isActive: boolean
+}
+
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "products" | "customers" | "collections" | "marketing" | "settings">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "products" | "customers" | "collections" | "banners" | "marketing" | "settings">("overview")
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [collections, setCollections] = useState<Collection[]>([])
+  const [banners, setBanners] = useState<Banner[]>([])
   
   // Marketing Promo Codes & dynamic combos
   const [coupons, setCoupons] = useState<any[]>([])
@@ -95,6 +104,7 @@ export default function AdminPage() {
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [loadingProducts, setLoadingProducts] = useState(false)
   const [loadingCollections, setLoadingCollections] = useState(false)
+  const [loadingBanners, setLoadingBanners] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [uploadingAdditionalImage, setUploadingAdditionalImage] = useState(false)
   const [loadingLeads, setLoadingLeads] = useState(false)
@@ -129,6 +139,16 @@ export default function AdminPage() {
   })
   const [uploadingCollectionImage, setUploadingCollectionImage] = useState(false)
   
+  // Banner CRUD states
+  const [showBannerModal, setShowBannerModal] = useState(false)
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
+  const [bannerForm, setBannerForm] = useState({
+    image: "",
+    link: "",
+    isActive: true,
+  })
+  const [uploadingBannerImage, setUploadingBannerImage] = useState(false)
+
   // Add/Edit Product form state
   const [productForm, setProductForm] = useState({
     name: "",
@@ -217,6 +237,7 @@ export default function AdminPage() {
     fetchOrders()
     fetchProducts()
     fetchCollections()
+    fetchBanners()
     fetchAdminPaymentSettings()
     fetchAbandonedLeads()
     fetchReturns()
@@ -335,6 +356,104 @@ export default function AdminPage() {
       console.error("Error fetching abandoned carts:", err)
     } finally {
       setLoadingLeads(false)
+    }
+  }
+
+  const fetchBanners = async () => {
+    setLoadingBanners(true)
+    try {
+      const res = await fetch("/api/banners")
+      if (!res.ok) throw new Error("Failed to fetch banners")
+      const data = await res.json()
+      setBanners(data)
+    } catch (e: any) {
+      console.error(e)
+      toast.error("Failed to load banners")
+    } finally {
+      setLoadingBanners(false)
+    }
+  }
+
+  const handleBannerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!bannerForm.image) {
+      toast.error("Image is required for banner")
+      return
+    }
+
+    try {
+      const isEditing = !!editingBanner
+      const url = isEditing ? `/api/banners/${editingBanner.id}` : "/api/banners"
+      const method = isEditing ? "PUT" : "POST"
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bannerForm),
+      })
+
+      if (!res.ok) throw new Error("Failed to save banner")
+
+      toast.success(isEditing ? "Banner updated successfully!" : "Banner created successfully!")
+      setShowBannerModal(false)
+      setBannerForm({ image: "", link: "", isActive: true })
+      setEditingBanner(null)
+      fetchBanners()
+    } catch (err) {
+      console.error(err)
+      toast.error("Failed to save banner")
+    }
+  }
+
+  const handleDeleteBanner = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this banner?")) return
+
+    try {
+      const res = await fetch(`/api/banners/${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Failed to delete banner")
+
+      toast.success("Banner deleted successfully")
+      fetchBanners()
+    } catch (err) {
+      console.error(err)
+      toast.error("Failed to delete banner")
+    }
+  }
+
+  const handleEditBanner = (banner: Banner) => {
+    setEditingBanner(banner)
+    setBannerForm({
+      image: banner.image || "",
+      link: banner.link || "",
+      isActive: banner.isActive,
+    })
+    setShowBannerModal(true)
+  }
+
+  const handleBannerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingBannerImage(true)
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!res.ok) throw new Error("Image upload failed")
+      const data = await res.json()
+      
+      setBannerForm((prev) => ({ ...prev, image: data.url }))
+      toast.success("Banner image uploaded successfully!")
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Failed to upload file")
+    } finally {
+      setUploadingBannerImage(false)
     }
   }
 
@@ -1320,6 +1439,14 @@ export default function AdminPage() {
                 Collections Manager
               </Button>
               <Button
+                variant={activeTab === "banners" ? "secondary" : "ghost"}
+                className="w-full justify-start font-bold h-11 text-sm gap-3"
+                onClick={() => setActiveTab("banners")}
+              >
+                <MonitorPlay className="h-5 w-5" />
+                Banners Manager
+              </Button>
+              <Button
                 variant={activeTab === "marketing" ? "secondary" : "ghost"}
                 className="w-full justify-start font-bold h-11 text-sm gap-3"
                 onClick={() => setActiveTab("marketing")}
@@ -1955,6 +2082,76 @@ export default function AdminPage() {
                                 </td>
                               </tr>
                             ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              )}
+
+              {/* TAB: BANNERS */}
+              {activeTab === "banners" && (
+                <Card className="p-6 border-border bg-card/60 backdrop-blur-xl">
+                  <div className="flex justify-between items-center mb-8">
+                    <div>
+                      <h2 className="text-2xl font-bold tracking-tight mb-1 text-emerald-400">Top Banners</h2>
+                      <p className="text-muted-foreground text-sm">Manage the rotating hero banners on the homepage.</p>
+                    </div>
+                    <Button onClick={() => { setEditingBanner(null); setBannerForm({ image: "", link: "", isActive: true }); setShowBannerModal(true); }} className="bg-emerald-600 hover:bg-emerald-700 font-bold gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Banner
+                    </Button>
+                  </div>
+
+                  <div className="overflow-x-auto rounded-xl border border-border bg-black/40">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs uppercase bg-black/60 text-muted-foreground">
+                        <tr>
+                          <th className="px-6 py-4 font-bold tracking-wider">Image</th>
+                          <th className="px-6 py-4 font-bold tracking-wider">Link URL</th>
+                          <th className="px-6 py-4 font-bold tracking-wider">Status</th>
+                          <th className="px-6 py-4 text-right font-bold tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/50">
+                        {loadingBanners ? (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
+                              Loading banners...
+                            </td>
+                          </tr>
+                        ) : banners.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
+                              No banners found. Add one to get started.
+                            </td>
+                          </tr>
+                        ) : (
+                          banners.map((banner) => (
+                            <tr key={banner.id} className="hover:bg-white/[0.02] transition-colors">
+                              <td className="px-6 py-4">
+                                <div className="h-16 w-32 relative rounded-md overflow-hidden bg-muted">
+                                  <Image src={banner.image || "/placeholder.svg"} alt="Banner" fill className="object-cover" />
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 font-medium max-w-xs truncate">{banner.link || "None"}</td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${banner.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                                  {banner.isActive ? "Active" : "Inactive"}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex justify-end gap-2">
+                                  <Button variant="ghost" size="icon" onClick={() => handleEditBanner(banner)}>
+                                    <Edit2 className="h-4 w-4 text-blue-400" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleDeleteBanner(banner.id)}>
+                                    <Trash2 className="h-4 w-4 text-red-400" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
                         )}
                       </tbody>
                     </table>
@@ -3013,6 +3210,91 @@ export default function AdminPage() {
                 disabled={processingReturn}
               >
                 {processingReturn ? "Logging Return Record..." : "Log Return Transaction"}
+              </Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {showBannerModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <Card className="relative w-full max-w-md p-6 md:p-8 bg-card border-border/80 shadow-2xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 h-8 w-8 border"
+              onClick={() => setShowBannerModal(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">{editingBanner ? "Edit Banner" : "Create Banner"}</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Configure your homepage rotating banner.
+              </p>
+            </div>
+
+            <form onSubmit={handleBannerSubmit} className="flex flex-col gap-5">
+              <div className="space-y-2">
+                <Label>Banner Image (required)</Label>
+                <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:bg-white/[0.02] transition-colors relative group">
+                  {bannerForm.image ? (
+                    <div className="relative h-32 w-full rounded-md overflow-hidden">
+                      <Image src={bannerForm.image || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Label htmlFor="banner-image" className="cursor-pointer bg-black/80 p-2 rounded-full text-white">
+                          <Edit2 className="h-4 w-4" />
+                        </Label>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="mx-auto h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                        <UploadCloud className="h-6 w-6 text-emerald-500" />
+                      </div>
+                      <div className="text-sm font-medium">Click to upload banner image</div>
+                      <p className="text-xs text-muted-foreground">Recommended size: 1920x600px</p>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    id="banner-image"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={handleBannerImageUpload}
+                    accept="image/*"
+                    disabled={uploadingBannerImage}
+                  />
+                  {uploadingBannerImage && (
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-xl">
+                      <RefreshCw className="h-6 w-6 animate-spin text-emerald-500" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="banner-link">Target URL (optional)</Label>
+                <Input
+                  id="banner-link"
+                  placeholder="e.g. /collections/offers"
+                  value={bannerForm.link}
+                  onChange={(e) => setBannerForm({ ...bannerForm, link: e.target.value })}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  id="banner-active"
+                  className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                  checked={bannerForm.isActive}
+                  onChange={(e) => setBannerForm({ ...bannerForm, isActive: e.target.checked })}
+                />
+                <Label htmlFor="banner-active">Banner is Active</Label>
+              </div>
+
+              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 mt-4">
+                {editingBanner ? "Update Banner" : "Create Banner"}
               </Button>
             </form>
           </Card>
