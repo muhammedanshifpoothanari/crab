@@ -14,7 +14,7 @@ export async function GET() {
         upiEnabled: true,
         codEnabled: true,
         whatsappCheckoutEnabled: false,
-        adminWhatsAppNumber: "919876543210",
+        adminWhatsAppNumber: "919778300633",
         updatedAt: new Date(),
       }
       await db.collection("settings").insertOne(defaultSettings)
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
           upiEnabled: upiEnabled ?? true,
           codEnabled: codEnabled ?? true,
           whatsappCheckoutEnabled: whatsappCheckoutEnabled ?? false,
-          adminWhatsAppNumber: adminWhatsAppNumber ?? "919876543210",
+          adminWhatsAppNumber: adminWhatsAppNumber ?? "919778300633",
           updatedAt: new Date(),
         },
       },
