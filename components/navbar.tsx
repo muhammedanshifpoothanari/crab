@@ -8,6 +8,8 @@ import { CartDrawer } from "@/components/cart-drawer"
 import { SearchDialog } from "@/components/search-dialog"
 import { usePathname } from "next/navigation"
 
+import Image from "next/image"
+
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
@@ -16,13 +18,15 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-sm">
       <div className="container mx-auto flex h-20 items-center justify-between px-4">
         <div className="flex items-center gap-12">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-accent shadow-lg shadow-primary/25 transition-all group-hover:scale-105 group-hover:shadow-xl group-hover:shadow-primary/30">
-              <span className="text-xl font-bold text-primary-foreground">C</span>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text transition-all">
-              CrabsCart
-            </span>
+          <Link href="/" className="flex items-center gap-2 group">
+            <Image
+              src="/logo.png"
+              alt="CrabsCart Logo"
+              width={160}
+              height={45}
+              className="h-10 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+              priority
+            />
           </Link>
 
           <nav className="hidden items-center gap-2 lg:flex">

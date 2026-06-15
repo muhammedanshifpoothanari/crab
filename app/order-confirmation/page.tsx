@@ -107,10 +107,10 @@ function OrderConfirmationContent() {
   const grandTotal = order.total + taxAmount
 
   // Pre-filled custom links
-  const whatsappUrl = `https://wa.me/918921284021?text=Hi%20CrabsCart%2C%20here%20are%20my%20photos%20for%20my%20personalized%20figurine%20order%20%2A${order.orderId}%2A`
+  const whatsappUrl = `https://wa.me/919778300633?text=Hi%20CrabsCart%2C%20here%20are%20my%20photos%20for%20my%20personalized%20figurine%20order%20%2A${order.orderId}%2A`
   const emailSubject = encodeURIComponent(`Photos for Custom Figurine Order - ${order.orderId}`)
   const emailBody = encodeURIComponent(`Hi CrabsCart Team,\n\nI have placed an order for personalized figurines.\nMy Order ID is: ${order.orderId}\n\nAttached are my reference photos (Front view, Side view, Outfits).\n\nCustomer Name: ${order.customer.name}`)
-  const emailUrl = `mailto:hello@crabscart.com?subject=${emailSubject}&body=${emailBody}`
+  const emailUrl = `mailto:crabscart@gmail.com?subject=${emailSubject}&body=${emailBody}`
 
   return (
     <main className="min-h-screen bg-background flex flex-col justify-between">

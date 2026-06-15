@@ -35,7 +35,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   
   // Dynamic Settings states
   const [whatsappCheckoutEnabled, setWhatsappCheckoutEnabled] = useState(false)
-  const [adminWhatsAppNumber, setAdminWhatsAppNumber] = useState("919400757707")
+  const [adminWhatsAppNumber, setAdminWhatsAppNumber] = useState("919778300633")
 
   // Phone Interceptor States
   const [showPhonePrompt, setShowPhonePrompt] = useState(false)
@@ -50,7 +50,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const savedCart = localStorage.getItem("cart_items")
     if (savedCart) {
       try {
-        setItems(JSON.parse(savedCart))
+        const parsed = JSON.parse(savedCart)
+        if (Array.isArray(parsed)) {
+          const validItems = parsed.filter(item => item && item.name && (item.price !== undefined || item.basePrice !== undefined))
+          const normalizedItems = validItems.map(item => {
+            const parsedPrice = item.price !== undefined ? Number(item.price) : Number(item.basePrice)
+            const fallbackPrice = isNaN(parsedPrice) ? 0 : parsedPrice
+            let fallbackOriginalPrice = Number(item.originalPrice !== undefined ? item.originalPrice : item.price)
+            if (isNaN(fallbackOriginalPrice)) {
+              fallbackOriginalPrice = fallbackPrice
+            }
+            return {
+              ...item,
+              price: fallbackPrice,
+              originalPrice: fallbackOriginalPrice
+            }
+          })
+          setItems(normalizedItems)
+        }
       } catch (e) {
         console.error("Failed to parse cart items:", e)
       }
@@ -62,7 +79,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .then(data => {
         if (data && !data.error) {
           setWhatsappCheckoutEnabled(!!data.whatsappCheckoutEnabled)
-          setAdminWhatsAppNumber(data.adminWhatsAppNumber || "919400757707")
+          setAdminWhatsAppNumber(data.adminWhatsAppNumber || "919778300633")
         }
       })
       .catch(err => console.error("Error fetching settings:", err))
@@ -116,7 +133,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const handlePhoneSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const cleanPhone = phoneNumberInput.replace(/[\s-+]/g, "")
+    let cleanPhone = phoneNumberInput.replace(/[\s-+]/g, "")
+    if (cleanPhone.startsWith("0091") && cleanPhone.length === 14) {
+      cleanPhone = cleanPhone.substring(4)
+    } else if (cleanPhone.startsWith("91") && cleanPhone.length === 12) {
+      cleanPhone = cleanPhone.substring(2)
+    } else if (cleanPhone.startsWith("0") && cleanPhone.length === 11) {
+      cleanPhone = cleanPhone.substring(1)
+    }
     const phoneRegex = /^[6-9]\d{9}$/
     if (!phoneRegex.test(cleanPhone)) {
       toast({
@@ -196,7 +220,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotal = items.reduce((sum, item) => sum + (Number(item.price) || 0) * item.quantity, 0)
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   // Dynamic auto combo discounts

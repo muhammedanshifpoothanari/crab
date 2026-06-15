@@ -103,7 +103,7 @@ export default function PrivacyPolicyPage() {
                 <li>Request a copy of data we hold about you</li>
                 <li>Withdraw consent for data processing</li>
               </ul>
-              <p className="mt-3">To exercise these rights, contact us at <strong>crabsown@gmail.com</strong>.</p>
+              <p className="mt-3">To exercise these rights, contact us at <strong>crabscart@gmail.com</strong>.</p>
             </div>
 
             <div>
@@ -138,8 +138,8 @@ export default function PrivacyPolicyPage() {
               <p>If you have questions or concerns about this Privacy Policy, contact us at:</p>
               <div className="mt-3 p-4 rounded-xl border border-border/60 bg-secondary/10 space-y-1 text-sm">
                 <p className="font-semibold text-foreground">CrabsCart</p>
-                <p>Email: crabsown@gmail.com</p>
-                <p>Phone: +91 94007 57707</p>
+                <p>Email: crabscart@gmail.com</p>
+                <p>Phone: +91 97783 00633</p>
                 <p>Address: Karunagappally, Kerala, India</p>
               </div>
             </div>

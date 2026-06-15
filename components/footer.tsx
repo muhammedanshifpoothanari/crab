@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { Instagram, Mail, Phone, MapPin } from "lucide-react"
 
@@ -9,10 +10,13 @@ export function Footer() {
           <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col gap-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-accent shadow-lg shadow-primary/25">
-                  <span className="text-xl font-bold text-primary-foreground">C</span>
-                </div>
-                <span className="text-xl font-bold">CrabsCart</span>
+                <Image
+                  src="/logo.png"
+                  alt="CrabsCart Logo"
+                  width={150}
+                  height={42}
+                  className="h-9 w-auto object-contain"
+                />
               </div>
               <p className="text-sm text-muted-foreground text-pretty leading-relaxed max-w-xs">
                 Creating personalized memories one figurine at a time. Premium quality custom gifts for every occasion.
@@ -74,22 +78,22 @@ export function Footer() {
               <h3 className="font-semibold text-base">Get in Touch</h3>
               <div className="flex flex-col gap-4 text-sm">
                 <a
-                  href="tel:+919400757707"
+                  href="tel:+919778300633"
                   className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors group w-fit"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                     <Phone className="h-4 w-4" />
                   </div>
-                  <span>+91 94007 57707</span>
+                  <span>+91 97783 00633</span>
                 </a>
                 <a
-                  href="mailto:crabsown@gmail.com"
+                  href="mailto:crabscart@gmail.com"
                   className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors group w-fit"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-all">
                     <Mail className="h-4 w-4" />
                   </div>
-                  <span>crabsown@gmail.com</span>
+                  <span>crabscart@gmail.com</span>
                 </a>
                 <div className="flex items-start gap-3 text-muted-foreground">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -98,7 +102,7 @@ export function Footer() {
                   <span className="pt-1.5">Karunagappally, Kerala, India</span>
                 </div>
                 <a
-                  href="https://instagram.com/crabsown"
+                  href="https://instagram.com/crabscart"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors group w-fit"
@@ -106,7 +110,7 @@ export function Footer() {
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-all">
                     <Instagram className="h-4 w-4" />
                   </div>
-                  <span>@crabsown</span>
+                  <span>@crabscart</span>
                 </a>
               </div>
             </div>
@@ -128,7 +132,7 @@ export function Footer() {
  
       {/* Floating WhatsApp Widget */}
       <a
-        href="https://wa.me/919400757707"
+        href="https://wa.me/919778300633"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50 flex items-center justify-center h-14 w-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/40 hover:scale-110 transition-all duration-300 group"

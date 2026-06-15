@@ -89,7 +89,7 @@ export default function TermsOfServicePage() {
               <p>
                 Orders may be cancelled within <strong>24 hours</strong> of placement if production has not yet begun. Once
                 an order enters the crafting stage, cancellations are not possible due to the custom nature of our products.
-                To request a cancellation, contact us immediately at <strong>crabsown@gmail.com</strong>.
+                To request a cancellation, contact us immediately at <strong>crabscart@gmail.com</strong>.
               </p>
             </div>
 
@@ -156,8 +156,8 @@ export default function TermsOfServicePage() {
               <p>For questions about these Terms of Service, please contact us:</p>
               <div className="mt-3 p-4 rounded-xl border border-border/60 bg-secondary/10 space-y-1 text-sm">
                 <p className="font-semibold text-foreground">CrabsCart</p>
-                <p>Email: crabsown@gmail.com</p>
-                <p>Phone: +91 94007 57707</p>
+                <p>Email: crabscart@gmail.com</p>
+                <p>Phone: +91 97783 00633</p>
                 <p>Address: Karunagappally, Kerala, India</p>
               </div>
             </div>

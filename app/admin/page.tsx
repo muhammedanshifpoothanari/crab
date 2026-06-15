@@ -85,7 +85,7 @@ interface Banner {
 }
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "products" | "customers" | "collections" | "banners" | "marketing" | "settings">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "products" | "customers" | "collections" | "banners" | "marketing" | "settings" | "returns" | "messages">("overview")
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [collections, setCollections] = useState<Collection[]>([])
@@ -178,6 +178,8 @@ export default function AdminPage() {
 
   const [returns, setReturns] = useState<any[]>([])
   const [loadingReturns, setLoadingReturns] = useState(false)
+  const [messages, setMessages] = useState<any[]>([])
+  const [loadingMessages, setLoadingMessages] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [returningOrder, setReturningOrder] = useState<Order | null>(null)
   const [editingReturnId, setEditingReturnId] = useState<string | null>(null)
@@ -230,6 +232,39 @@ export default function AdminPage() {
     }
   }
 
+  const fetchMessages = async () => {
+    setLoadingMessages(true)
+    try {
+      const res = await fetch("/api/contacts")
+      if (res.ok) {
+        const data = await res.json()
+        setMessages(data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch messages:", err)
+    } finally {
+      setLoadingMessages(false)
+    }
+  }
+
+  const handleMessageDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this message?")) return
+
+    try {
+      const res = await fetch(`/api/contacts/${id}`, {
+        method: "DELETE",
+      })
+
+      if (!res.ok) throw new Error("Delete failed")
+      
+      toast.success("Message deleted successfully")
+      fetchMessages()
+    } catch (e: any) {
+      console.error(e)
+      toast.error("Failed to delete message")
+    }
+  }
+
   useEffect(() => {
     if (typeof window !== "undefined" && sessionStorage.getItem("admin_authenticated") === "true") {
       setIsAdminLoggedIn(true)
@@ -242,6 +277,7 @@ export default function AdminPage() {
     fetchAbandonedLeads()
     fetchReturns()
     fetchCoupons()
+    fetchMessages()
   }, [])
 
   const fetchCoupons = async () => {
@@ -567,7 +603,7 @@ export default function AdminPage() {
       const orderPayload = {
         customer: {
           name: `Recovered Lead Customer (+91 ${lead.phone})`,
-          email: "crabsown@gmail.com",
+          email: "crabscart@gmail.com",
           phone: lead.phone,
           address: "Karunagappally, Kerala, India (Recovered Abandoned Cart)",
           city: "Karunagappally",
@@ -710,7 +746,7 @@ export default function AdminPage() {
 
           <div class="footer">
             <strong>CrabsCart Operations Hub</strong><br>
-            Karunagappally, Kerala, India | crabsown@gmail.com | +91 94007 57707<br>
+            Karunagappally, Kerala, India | crabscart@gmail.com | +91 97783 00633<br>
             Thank you for your business! This is a computer generated delivery document.
           </div>
 
@@ -924,14 +960,13 @@ export default function AdminPage() {
     }
   }
 
-  // Edit product initiator
   const initiateEditProduct = (prod: Product) => {
     setEditingProduct(prod)
     setProductForm({
-      name: prod.name,
+      name: prod.name || "",
       description: prod.description || "",
-      price: prod.price.toString(),
-      originalPrice: prod.originalPrice.toString(),
+      price: prod.price?.toString() ?? "0",
+      originalPrice: (prod.originalPrice ?? prod.price)?.toString() ?? "0",
       image: prod.image || "",
       additionalImages: prod.additionalImages || [],
       category: prod.category || "couples",
@@ -1467,6 +1502,16 @@ export default function AdminPage() {
                 <span>Returns & Conflicts</span>
               </Button>
               <Button
+                variant={activeTab === "messages" ? "secondary" : "ghost"}
+                className="w-full justify-start font-bold h-11 text-sm gap-3"
+                onClick={() => setActiveTab("messages")}
+              >
+                <svg className="h-5 w-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>Contact Messages</span>
+              </Button>
+              <Button
                 variant={activeTab === "settings" ? "secondary" : "ghost"}
                 className="w-full justify-start font-bold h-11 text-sm gap-3"
                 onClick={() => setActiveTab("settings")}
@@ -1659,7 +1704,7 @@ export default function AdminPage() {
                               </Button>
                             </div>
                             <span className="text-[9px] text-muted-foreground leading-normal">
-                              Must include country code without "+" or spaces (e.g. 919400757707).
+                              Must include country code without "+" or spaces (e.g. 919778300633).
                             </span>
                           </div>
                         </div>
@@ -1867,8 +1912,8 @@ export default function AdminPage() {
                     <p className="text-center text-muted-foreground py-10">No products found matching query.</p>
                   ) : (
                     <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      {filteredProducts.map((product) => (
-                        <Card key={product.id} className="p-4 border-border bg-background flex flex-col justify-between hover:shadow-md transition-shadow">
+                      {filteredProducts.map((product, index) => (
+                        <Card key={product._id || product.id || index} className="p-4 border-border bg-background flex flex-col justify-between hover:shadow-md transition-shadow">
                           <div className="space-y-3">
                             <div className="relative aspect-square rounded-md overflow-hidden bg-muted">
                               <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
@@ -2450,11 +2495,11 @@ export default function AdminPage() {
                     <div className="grid sm:grid-cols-3 gap-4 text-xs">
                       <div className="p-4 rounded-xl border border-border/20 bg-background/30">
                         <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-1">Support Contact</div>
-                        <div className="font-bold text-sm text-foreground">+91 94007 57707</div>
+                        <div className="font-bold text-sm text-foreground">+91 97783 00633</div>
                       </div>
                       <div className="p-4 rounded-xl border border-border/20 bg-background/30">
                         <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-1">Business Email</div>
-                        <div className="font-bold text-sm text-foreground">crabsown@gmail.com</div>
+                        <div className="font-bold text-sm text-foreground">crabscart@gmail.com</div>
                       </div>
                       <div className="p-4 rounded-xl border border-border/20 bg-background/30">
                         <div className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-1">Warehouse Address</div>
@@ -2463,6 +2508,71 @@ export default function AdminPage() {
                     </div>
                   </Card>
                 </div>
+              )}
+
+              {/* TAB 8: CONTACT MESSAGES */}
+              {activeTab === "messages" && (
+                <Card className="p-6 border-border bg-card/60 backdrop-blur-xl">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold mb-1">Customer Inquiries & Feedback</h3>
+                      <p className="text-xs text-muted-foreground">Dynamic messages posted directly from the Contact page form.</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={fetchMessages} className="gap-2 font-semibold">
+                      Refresh 🔄
+                    </Button>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-border/60 text-muted-foreground uppercase font-bold text-[10px] tracking-wider">
+                          <th className="py-3 px-4">Name</th>
+                          <th className="py-3 px-4">Email</th>
+                          <th className="py-3 px-4">Message</th>
+                          <th className="py-3 px-4">Date</th>
+                          <th className="py-3 px-4 text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loadingMessages ? (
+                          <tr>
+                            <td colSpan={5} className="py-10 text-center text-muted-foreground animate-pulse">
+                              Loading messages...
+                            </td>
+                          </tr>
+                        ) : messages.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="py-10 text-center text-muted-foreground">
+                              No inquiries found.
+                            </td>
+                          </tr>
+                        ) : (
+                          messages.map((msg) => (
+                            <tr key={msg._id} className="border-b border-border/20 hover:bg-secondary/10 transition-colors">
+                              <td className="py-3.5 px-4 font-semibold">{msg.name}</td>
+                              <td className="py-3.5 px-4 font-mono font-semibold text-primary">{msg.email}</td>
+                              <td className="py-3.5 px-4 max-w-xs truncate" title={msg.message}>{msg.message}</td>
+                              <td className="py-3.5 px-4 text-muted-foreground">
+                                {new Date(msg.createdAt).toLocaleString("en-IN")}
+                              </td>
+                              <td className="py-3.5 px-4 text-center">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleMessageDelete(msg._id)}
+                                  className="h-8 text-[10px] uppercase font-bold"
+                                >
+                                  Delete 🗑️
+                                </Button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
               )}
             </div>
           </div>

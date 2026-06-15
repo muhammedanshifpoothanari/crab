@@ -16,13 +16,29 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" })
   const { toast } = useToast()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: "Message sent!",
-      description: "We'll get back to you within 24 hours.",
-    })
-    setFormData({ name: "", email: "", message: "" })
+    try {
+      const response = await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      if (!response.ok) throw new Error("Failed to send message")
+      
+      toast({
+        title: "Message sent!",
+        description: "We'll get back to you within 24 hours.",
+      })
+      setFormData({ name: "", email: "", message: "" })
+    } catch (err) {
+      console.error(err)
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -118,10 +134,10 @@ export default function ContactPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold mb-2">Phone</h3>
                     <a
-                      href="tel:+919400757707"
+                      href="tel:+919778300633"
                       className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
-                      +91 94007 57707
+                      +91 97783 00633
                     </a>
                   </div>
                 </div>
@@ -135,10 +151,10 @@ export default function ContactPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold mb-2">Email</h3>
                     <a
-                      href="mailto:crabsown@gmail.com"
+                      href="mailto:crabscart@gmail.com"
                       className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
-                      crabsown@gmail.com
+                      crabscart@gmail.com
                     </a>
                   </div>
                 </div>
@@ -164,12 +180,12 @@ export default function ContactPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold mb-2">Social</h3>
                     <a
-                      href="https://instagram.com/crabsown"
+                      href="https://instagram.com/crabscart"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
-                      @crabsown
+                      @crabscart
                     </a>
                   </div>
                 </div>

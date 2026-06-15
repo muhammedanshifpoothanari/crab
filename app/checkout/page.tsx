@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ShoppingBag, CreditCard, Wallet, Truck, ArrowRight, ShieldCheck, RefreshCw } from "lucide-react"
+import { ShoppingBag, CreditCard, Wallet, Truck, ArrowRight, ShieldCheck, RefreshCw, CheckCircle2, MessageSquare, Mail } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -57,6 +57,8 @@ export default function CheckoutPage() {
   const { items, subtotal, total, discount, discountPercentage, clearCart } = useCart()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [placedOrderId, setPlacedOrderId] = useState("")
 
   // Form State
   const [form, setForm] = useState({
@@ -128,7 +130,14 @@ export default function CheckoutPage() {
     }
 
     // Indian Mobile Number Validator (10 digits starting with 6-9)
-    const cleanPhone = form.phone.replace(/[\s-+]/g, "")
+    let cleanPhone = form.phone.replace(/[\s-+]/g, "")
+    if (cleanPhone.startsWith("0091") && cleanPhone.length === 14) {
+      cleanPhone = cleanPhone.substring(4)
+    } else if (cleanPhone.startsWith("91") && cleanPhone.length === 12) {
+      cleanPhone = cleanPhone.substring(2)
+    } else if (cleanPhone.startsWith("0") && cleanPhone.length === 11) {
+      cleanPhone = cleanPhone.substring(1)
+    }
     const phoneRegex = /^[6-9]\d{9}$/
     if (!phoneRegex.test(cleanPhone)) {
       toast.error("Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)")
@@ -170,7 +179,7 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customer: form,
+          customer: { ...form, phone: cleanPhone },
           items: items.map((item) => ({
             id: item.id,
             name: item.name,
@@ -201,10 +210,11 @@ export default function CheckoutPage() {
       toast.success("Order Placed Successfully!")
       
       // Save customer phone in localStorage to auto-retrieve on profile page later
-      localStorage.setItem("customer_phone", form.phone)
+      localStorage.setItem("customer_phone", cleanPhone)
       
+      setPlacedOrderId(data.orderId)
+      setShowSuccessModal(true)
       clearCart()
-      router.push(`/order-confirmation?orderId=${data.orderId}`)
     } catch (err: any) {
       console.error(err)
       toast.error(err.message || "An error occurred while placing your order")
@@ -213,7 +223,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !showSuccessModal) {
     return (
       <main className="min-h-screen bg-background flex flex-col justify-between">
         <Navbar />
@@ -233,6 +243,11 @@ export default function CheckoutPage() {
       </main>
     )
   }
+
+  const whatsappUrl = `https://wa.me/919778300633?text=Hi%20CrabsCart%2C%20here%20are%20my%20photos%20for%20my%20personalized%20figurine%20order%20%2A${placedOrderId}%2A`
+  const emailSubject = encodeURIComponent(`Photos for Custom Figurine Order - ${placedOrderId}`)
+  const emailBody = encodeURIComponent(`Hi CrabsCart Team,\n\nI have placed an order for personalized figurines.\nMy Order ID is: ${placedOrderId}\n\nAttached are my reference photos (Front view, Side view, Outfits).\n\nCustomer Name: ${form.name}`)
+  const emailUrl = `mailto:crabscart@gmail.com?subject=${emailSubject}&body=${emailBody}`
 
   return (
     <main className="min-h-screen bg-background flex flex-col justify-between">
@@ -517,8 +532,8 @@ export default function CheckoutPage() {
 
                 {/* Items Grid */}
                 <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-1 mb-6 space-y-1">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex gap-4 items-center border-b border-border/20 pb-3">
+                  {items.map((item, index) => (
+                    <div key={item._id || item.id || index} className="flex gap-4 items-center border-b border-border/20 pb-3">
                       <div className="relative h-14 w-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                         <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
                       </div>
@@ -593,6 +608,66 @@ export default function CheckoutPage() {
           </form>
         </div>
       </section>
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md p-8 bg-card border border-border/80 shadow-2xl rounded-2xl flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-300">
+            <div className="relative">
+              <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl scale-125 animate-pulse" />
+              <CheckCircle2 className="h-16 w-16 text-emerald-500 relative" />
+            </div>
+            
+            <div>
+              <h3 className="text-2xl font-extrabold text-foreground">Order Confirmed! 🎉</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Thank you for your purchase. Your order ID is{" "}
+                <span className="font-mono font-bold text-foreground bg-secondary/80 px-2 py-0.5 rounded">
+                  {placedOrderId}
+                </span>
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 text-left text-xs leading-relaxed space-y-3">
+              <p className="font-bold text-primary text-sm flex items-center gap-2">
+                <span>📸 Reference Photos Required</span>
+              </p>
+              <p className="text-muted-foreground">
+                To begin crafting your customized figurine, please share your reference portraits (front, side profiles, outfits) with our design team.
+              </p>
+              <div className="flex flex-col gap-2 pt-2">
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-bold h-10 text-xs shadow-md">
+                    <MessageSquare className="h-4 w-4 fill-white text-emerald-600" />
+                    Upload via WhatsApp
+                  </Button>
+                </a>
+                <a href={emailUrl} className="w-full">
+                  <Button variant="outline" className="w-full border-border/80 bg-background/50 hover:bg-background gap-2 font-bold h-10 text-xs">
+                    <Mail className="h-4 w-4" />
+                    Upload via Email
+                  </Button>
+                </a>
+              </div>
+            </div>
+
+            <div className="flex gap-3 w-full">
+              <Button
+                variant="outline"
+                className="flex-1 h-11 text-xs font-bold border-border"
+                onClick={() => router.push(`/profile?email=${form.email}`)}
+              >
+                Track Order
+              </Button>
+              <Button
+                className="flex-1 h-11 text-xs font-bold"
+                onClick={() => router.push("/")}
+              >
+                Continue Shopping
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </main>
