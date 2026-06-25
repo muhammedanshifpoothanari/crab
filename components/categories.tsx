@@ -1,24 +1,9 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { Users, Heart, Sparkles, Trophy, Briefcase, Zap, Music, Plane, Car, Dumbbell } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import type { Product } from "@/lib/product-data"
-
-const iconMap: Record<string, any> = {
-  Heart,
-  Zap,
-  Briefcase,
-  Sparkles,
-  Users,
-  Trophy,
-  Dumbbell,
-  Music,
-  Plane,
-  Car,
-}
 
 export function Categories() {
   const [products, setProducts] = useState<Product[]>([])
@@ -47,60 +32,66 @@ export function Categories() {
   }, [])
 
   const getCollectionImage = (collectionId: string) => {
+    const catImages: Record<string, string> = {
+      couples: "/romantic-couple-figurine-standing-together.jpg",
+      superheroes: "/flying-superhero-figurine-cape.jpg",
+      professionals: "/doctor-figurine-with-stethoscope-white-coat.jpg",
+      wedding: "/wedding-cake-topper-bride-groom.jpg",
+      family: "/family-of-three-figurine-parents-child.jpg",
+    }
+    if (catImages[collectionId]) return catImages[collectionId]
+
     const product = products.find((p) => p.category === collectionId)
-    return product?.image || "/placeholder.svg?height=600&width=800"
+    return product?.image || "/placeholder.svg"
+  }
+
+  // Label mapped to Magicpin local categories format
+  const getMagicpinLabel = (name: string) => {
+    const labels: Record<string, string> = {
+      "Couples": "Dining & Food",
+      "Superheroes": "Fashion & Gear",
+      "Professionals": "Corporate Gifting",
+      "Wedding": "Events & Luxury",
+      "Family": "Groceries & Care",
+      "Hobbies": "Gamer Vouchers",
+      "Sports": "Gym & Fitness",
+      "Music": "Shows & Concerts",
+      "Travel": "Travel Deals",
+      "With Pets": "Pet Services",
+      "With Vehicles": "Auto Repairs",
+      "Fantasy": "Magic Vouchers"
+    }
+    return labels[name] || name
   }
 
   return (
-    <section id="categories" className="py-24 md:py-32 bg-gradient-to-b from-background via-background to-secondary/5">
+    <section id="categories" className="py-6 bg-white border-b border-gray-50">
       <div className="container mx-auto px-4 max-w-7xl">
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-primary/5 border border-primary/10">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-primary text-sm font-semibold tracking-wide">Collections</span>
-          </div>
-          <h2 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl md:text-6xl mb-6">
-            Explore Our Collections
-          </h2>
-          <p className="text-lg text-muted-foreground text-pretty max-w-2xl mx-auto leading-relaxed">
-            Handcrafted figurines tailored for every personality, occasion, and passion
-          </p>
+        {/* Section Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg md:text-xl font-black text-slate-800">Shop by Category</h2>
+          <Link href="/#products" className="text-xs font-bold text-[#ec2652] hover:text-[#d41c45] transition-colors">
+            View all
+          </Link>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {collections.map((collection) => {
-            const Icon = iconMap[collection.icon] || Heart
-            return (
-              <Link key={collection.id} href={`/collections/${collection.id}`}>
-                <Card className="group relative overflow-hidden border border-border/40 bg-card hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 h-full">
-                  <div className="relative h-56 overflow-hidden">
-                    <Image
-                      src={getCollectionImage(collection.id) || "/placeholder.svg"}
-                      alt={collection.name}
-                      fill
-                      className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-90" />
-
-                    <div className="absolute bottom-5 left-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-background/80 backdrop-blur-xl shadow-2xl border border-border/50 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:scale-110 transition-all duration-500">
-                      <Icon className="h-8 w-8" />
-                    </div>
-
-                    <div className="absolute top-5 right-5 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-xl border border-border/50 shadow-lg">
-                      <span className="text-xs font-semibold text-foreground">{collection.count} designs</span>
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold group-hover:text-primary transition-colors duration-300 mb-1">
-                      {collection.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Unique handcrafted pieces</p>
-                  </div>
-                </Card>
-              </Link>
-            )
-          })}
+        {/* Categories Circle list - Magicpin style horizontal scroller */}
+        <div className="flex overflow-x-auto gap-5 pb-3 scrollbar-none scroll-smooth">
+          {collections.map((collection) => (
+            <Link key={collection.id} href={`/collections/${collection.id}`} className="flex flex-col items-center flex-shrink-0">
+              <div className="relative w-16 h-16 rounded-full overflow-hidden border border-gray-100 bg-gray-50 shadow-sm hover:scale-105 transition-transform duration-300">
+                <Image
+                  src={getCollectionImage(collection.id)}
+                  alt={collection.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span className="text-[11px] font-bold text-gray-600 mt-2 text-center w-20 truncate">
+                {getMagicpinLabel(collection.name)}
+              </span>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

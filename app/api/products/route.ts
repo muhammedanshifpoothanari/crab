@@ -1,9 +1,22 @@
 import { NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db"
 import { allProducts } from "@/lib/product-data"
+import { getCache, setCache, invalidateCache } from "@/lib/cache"
+
+const CACHE_KEY = "products_list"
+const CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=600",
+}
 
 export async function GET() {
   try {
+    // 1. Check in-memory cache first
+    const cachedProducts = getCache(CACHE_KEY)
+    if (cachedProducts) {
+      return NextResponse.json(cachedProducts, { headers: CACHE_HEADERS })
+    }
+
+    // 2. Cache miss: Query MongoDB Atlas
     const { db } = await connectToDatabase()
     let products = await db.collection("products").find({}).toArray()
 
@@ -14,10 +27,13 @@ export async function GET() {
       products = await db.collection("products").find({}).toArray()
     }
 
-    return NextResponse.json(products)
+    // 3. Store in cache for 5 minutes (300 seconds)
+    setCache(CACHE_KEY, products, 300)
+
+    return NextResponse.json(products, { headers: CACHE_HEADERS })
   } catch (error: any) {
-    console.error("GET products error:", error)
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
+    console.error("GET products error (falling back to static products):", error)
+    return NextResponse.json(allProducts, { headers: CACHE_HEADERS })
   }
 }
 
@@ -56,6 +72,10 @@ export async function POST(request: Request) {
     }
 
     await db.collection("products").insertOne(newProduct)
+
+    // Invalidate the cache to ensure next GET loads the fresh product list
+    invalidateCache(CACHE_KEY)
+
     return NextResponse.json(newProduct, { status: 201 })
   } catch (error: any) {
     console.error("POST product error:", error)

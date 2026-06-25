@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db"
 import { ObjectId } from "mongodb"
+import { invalidateCache } from "@/lib/cache"
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,6 +24,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Banner not found" }, { status: 404 })
     }
 
+    // Invalidate banners cache
+    invalidateCache("banners_list")
+
     return NextResponse.json({ message: "Banner updated successfully" }, { status: 200 })
   } catch (error: any) {
     console.error("PUT banner error:", error)
@@ -40,6 +44,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "Banner not found" }, { status: 404 })
     }
+
+    // Invalidate banners cache
+    invalidateCache("banners_list")
 
     return NextResponse.json({ message: "Banner deleted successfully" }, { status: 200 })
   } catch (error: any) {

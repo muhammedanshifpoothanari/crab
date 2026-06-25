@@ -1,6 +1,7 @@
 import { ProductDetail } from "@/components/product-detail"
 import { connectToDatabase } from "@/lib/db"
 import { notFound } from "next/navigation"
+import { allProducts } from "@/lib/product-data"
 
 export const dynamic = "force-dynamic"
 
@@ -12,8 +13,18 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     notFound()
   }
 
-  const { db } = await connectToDatabase()
-  const product = await db.collection("products").findOne({ id: numericId })
+  let product = null
+  try {
+    const { db } = await connectToDatabase()
+    product = await db.collection("products").findOne({ id: numericId })
+  } catch (error) {
+    console.error("Database connection failed on product detail page, using local product data:", error)
+  }
+
+  // Fallback to static product data if DB search yielded nothing
+  if (!product) {
+    product = allProducts.find((p) => p.id === numericId)
+  }
 
   if (!product) {
     notFound()

@@ -4,6 +4,8 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { CartProvider } from "@/lib/cart-context"
 import { Toaster } from "@/components/ui/toaster"
+import { TopBanner } from "@/components/top-banner"
+import { BottomNav } from "@/components/bottom-nav"
 
 export const metadata: Metadata = {
   title: "CrabsCart - Personalized Gifts & Collectibles",
@@ -26,7 +28,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <CartProvider>
-          {children}
+          <div className="flex flex-col min-h-screen">
+            <TopBanner />
+            <main className="flex-1 pb-16 md:pb-0">
+              {children}
+            </main>
+            <BottomNav />
+          </div>
           <Toaster />
         </CartProvider>
         <Analytics />
