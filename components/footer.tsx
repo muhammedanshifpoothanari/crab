@@ -135,7 +135,7 @@ export function Footer() {
         href="https://wa.me/919778300633"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center h-14 w-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/40 hover:scale-110 transition-all duration-300 group"
+        className="fixed bottom-24 md:bottom-6 right-6 z-50 flex items-center justify-center h-14 w-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/40 hover:scale-110 transition-all duration-300 group"
         aria-label="Contact support on WhatsApp"
       >
         <span className="absolute inset-0 rounded-full bg-emerald-500/30 animate-ping group-hover:animate-none scale-105" />

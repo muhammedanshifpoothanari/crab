@@ -21,6 +21,35 @@ export function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // Geolocation Auto-Detection
+  useEffect(() => {
+    if (typeof window !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            )
+            const data = await res.json()
+            if (data && data.address) {
+              const city = data.address.city || data.address.town || data.address.suburb || data.address.village || ""
+              const state = data.address.state || ""
+              if (city || state) {
+                setLocation(`${city}${city && state ? ", " : ""}${state}`)
+              }
+            }
+          } catch (e) {
+            console.error("Reverse geocoding error:", e)
+          }
+        },
+        (error) => {
+          console.warn("Geolocation access denied or unavailable:", error)
+        }
+      )
+    }
+  }, [])
+
   // Fetch products for searching on mount
   useEffect(() => {
     fetch("/api/products")

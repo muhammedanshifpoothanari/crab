@@ -82,6 +82,9 @@ interface Banner {
   image: string
   link: string
   isActive: boolean
+  tag?: string
+  header?: string
+  description?: string
 }
 
 export default function AdminPage() {
@@ -146,6 +149,9 @@ export default function AdminPage() {
     image: "",
     link: "",
     isActive: true,
+    tag: "",
+    header: "",
+    description: "",
   })
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false)
 
@@ -462,6 +468,9 @@ export default function AdminPage() {
       image: banner.image || "",
       link: banner.link || "",
       isActive: banner.isActive,
+      tag: banner.tag || "",
+      header: banner.header || "",
+      description: banner.description || "",
     })
     setShowBannerModal(true)
   }
@@ -2142,7 +2151,7 @@ export default function AdminPage() {
                       <h2 className="text-2xl font-bold tracking-tight mb-1 text-emerald-400">Top Banners</h2>
                       <p className="text-muted-foreground text-sm">Manage the rotating hero banners on the homepage.</p>
                     </div>
-                    <Button onClick={() => { setEditingBanner(null); setBannerForm({ image: "", link: "", isActive: true }); setShowBannerModal(true); }} className="bg-emerald-600 hover:bg-emerald-700 font-bold gap-2">
+                    <Button onClick={() => { setEditingBanner(null); setBannerForm({ image: "", link: "", isActive: true, tag: "", header: "", description: "" }); setShowBannerModal(true); }} className="bg-emerald-600 hover:bg-emerald-700 font-bold gap-2">
                       <Plus className="h-4 w-4" />
                       Add Banner
                     </Button>
@@ -3380,6 +3389,36 @@ export default function AdminPage() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="banner-tag">Offer Tag Writing (optional)</Label>
+                <Input
+                  id="banner-tag"
+                  placeholder="e.g. New Collection"
+                  value={bannerForm.tag}
+                  onChange={(e) => setBannerForm({ ...bannerForm, tag: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="banner-header">Header Text (optional)</Label>
+                <Input
+                  id="banner-header"
+                  placeholder="e.g. Elevate Your Everyday Style"
+                  value={bannerForm.header}
+                  onChange={(e) => setBannerForm({ ...bannerForm, header: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="banner-description">Description Text (optional)</Label>
+                <Input
+                  id="banner-description"
+                  placeholder="e.g. Discover our latest collection..."
+                  value={bannerForm.description}
+                  onChange={(e) => setBannerForm({ ...bannerForm, description: e.target.value })}
+                />
               </div>
 
               <div className="space-y-2">

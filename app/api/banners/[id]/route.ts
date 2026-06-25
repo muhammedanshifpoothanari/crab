@@ -8,9 +8,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params
     const { db } = await connectToDatabase()
     const body = await request.json()
-    const { image, link, isActive } = body
+    const { tag, header, description, image, link, isActive } = body
 
     const updateFields: any = {}
+    if (tag !== undefined) updateFields.tag = tag
+    if (header !== undefined) updateFields.header = header
+    if (description !== undefined) updateFields.description = description
     if (image !== undefined) updateFields.image = image
     if (link !== undefined) updateFields.link = link
     if (isActive !== undefined) updateFields.isActive = isActive

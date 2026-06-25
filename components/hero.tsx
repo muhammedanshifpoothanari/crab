@@ -9,6 +9,9 @@ interface DbBanner {
   image: string
   link: string
   isActive: boolean
+  tag?: string
+  header?: string
+  description?: string
 }
 
 interface StaticSlide {
@@ -100,44 +103,100 @@ export function Hero() {
     <section className="px-4 py-4 md:py-6 bg-white">
       <div className="container mx-auto max-w-7xl">
         {hasDbBanners && currentDbBanner ? (
-          /* Render dynamic custom banner uploaded from Admin Panel */
-          <div className="relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[3/1] bg-gray-100 shadow-md">
-            {currentDbBanner.link ? (
-              <Link href={currentDbBanner.link}>
+          currentDbBanner.header || currentDbBanner.tag ? (
+            /* Render dynamic custom banner formatted as a structured card (Magicpin style) */
+            <div className="relative rounded-2xl overflow-hidden bg-[#fff0f3] p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm">
+              {/* Left Content */}
+              <div className="flex-1 space-y-4 md:space-y-5 max-w-lg z-10 text-left">
+                <span className="inline-block px-3 py-1 text-xs font-bold text-[#ec2652] bg-[#ec2652]/10 rounded-full">
+                  {currentDbBanner.tag || "Offer"}
+                </span>
+                <h1 className="text-2xl md:text-4xl font-black tracking-tight leading-tight text-slate-800">
+                  {currentDbBanner.header}
+                </h1>
+                {currentDbBanner.description && (
+                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed font-semibold">
+                    {currentDbBanner.description}
+                  </p>
+                )}
+                {currentDbBanner.link && (
+                  <Link href={currentDbBanner.link} className="inline-block">
+                    <button className="px-5 py-2.5 bg-[#ec2652] hover:bg-[#d41c45] text-white font-extrabold rounded-full shadow-md transition-transform hover:scale-105 duration-300 text-xs md:text-sm">
+                      Get Deal
+                    </button>
+                  </Link>
+                )}
+              </div>
+
+              {/* Right Content: Uploaded Side Image */}
+              <div className="flex-1 relative w-full h-[200px] md:h-[300px] mt-6 md:mt-0 flex justify-center md:justify-end z-10">
+                <div className="relative w-[200px] md:w-[280px] h-full">
+                  <Image
+                    src={currentDbBanner.image}
+                    alt={currentDbBanner.header || "Deal Image"}
+                    fill
+                    className="object-cover rounded-xl shadow-lg border-2 border-white"
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* Page Indicators */}
+              {dbBanners.length > 1 && (
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                  {dbBanners.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentIndex(idx)}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        idx === currentIndex ? "w-5 bg-[#ec2652]" : "w-2 bg-slate-300"
+                      }`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Render legacy banner as a full-bleed background image */
+            <div className="relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[3/1] bg-gray-100 shadow-md">
+              {currentDbBanner.link ? (
+                <Link href={currentDbBanner.link}>
+                  <Image
+                    src={currentDbBanner.image}
+                    alt="Custom Promo Banner"
+                    fill
+                    className="object-cover transition-transform duration-700 hover:scale-102"
+                    priority
+                  />
+                </Link>
+              ) : (
                 <Image
                   src={currentDbBanner.image}
                   alt="Custom Promo Banner"
                   fill
-                  className="object-cover transition-transform duration-700 hover:scale-102"
+                  className="object-cover"
                   priority
                 />
-              </Link>
-            ) : (
-              <Image
-                src={currentDbBanner.image}
-                alt="Custom Promo Banner"
-                fill
-                className="object-cover"
-                priority
-              />
-            )}
-            
-            {/* Page Indicators */}
-            {dbBanners.length > 1 && (
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                {dbBanners.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      idx === currentIndex ? "w-5 bg-[#ec2652]" : "w-2 bg-white/70 shadow-sm"
-                    }`}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+              )}
+              
+              {/* Page Indicators */}
+              {dbBanners.length > 1 && (
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                  {dbBanners.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentIndex(idx)}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        idx === currentIndex ? "w-5 bg-[#ec2652]" : "w-2 bg-white/70 shadow-sm"
+                      }`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )
         ) : (
           /* Fallback static Magicpin styled slides */
           currentStaticSlide && (

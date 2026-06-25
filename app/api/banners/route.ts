@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   try {
     const { db } = await connectToDatabase()
     const body = await request.json()
-    const { image, link, isActive } = body
+    const { tag, header, description, image, link, isActive } = body
 
     if (!image) {
       return NextResponse.json(
@@ -50,6 +50,9 @@ export async function POST(request: Request) {
     }
 
     const newBanner = {
+      tag: tag || "",
+      header: header || "",
+      description: description || "",
       image,
       link: link || "",
       isActive: isActive !== undefined ? isActive : true,

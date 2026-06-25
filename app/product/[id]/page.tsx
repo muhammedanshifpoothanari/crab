@@ -2,8 +2,39 @@ import { ProductDetail } from "@/components/product-detail"
 import { connectToDatabase } from "@/lib/db"
 import { notFound } from "next/navigation"
 import { allProducts } from "@/lib/product-data"
+import type { Metadata } from "next"
 
 export const dynamic = "force-dynamic"
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const numericId = Number.parseInt(id)
+  if (Number.isNaN(numericId)) return {}
+
+  let product = null
+  try {
+    const { db } = await connectToDatabase()
+    product = await db.collection("products").findOne({ id: numericId })
+  } catch (error) {
+    // Ignore db err on SEO meta
+  }
+
+  if (!product) {
+    product = allProducts.find((p) => p.id === numericId)
+  }
+
+  if (!product) return {}
+
+  return {
+    title: `${product.name} - Custom Collectibles | CrabsCart`,
+    description: product.description || `Buy personalized ${product.name} figurines at CrabsCart. High quality custom caricatures for special gifting moments.`,
+    openGraph: {
+      title: `${product.name} - Custom Collectibles | CrabsCart`,
+      description: product.description,
+      images: [product.image || "/placeholder.svg"],
+    },
+  }
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
