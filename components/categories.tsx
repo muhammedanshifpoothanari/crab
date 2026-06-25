@@ -7,7 +7,7 @@ import type { Product } from "@/lib/product-data"
 
 export function Categories() {
   const [products, setProducts] = useState<Product[]>([])
-  const [collections, setCollections] = useState<{ id: string; name: string; icon: string; count: number }[]>([])
+  const [collections, setCollections] = useState<{ id: string; name: string; icon: string; count: number; image?: string }[]>([])
 
   useEffect(() => {
     // Fetch products
@@ -81,7 +81,7 @@ export function Categories() {
             <Link key={collection.id} href={`/collections/${collection.id}`} className="flex flex-col items-center flex-shrink-0">
               <div className="relative w-16 h-16 rounded-full overflow-hidden border border-gray-100 bg-gray-50 shadow-sm hover:scale-105 transition-transform duration-300">
                 <Image
-                  src={getCollectionImage(collection.id)}
+                  src={collection.image || getCollectionImage(collection.id)}
                   alt={collection.name}
                   fill
                   className="object-cover"

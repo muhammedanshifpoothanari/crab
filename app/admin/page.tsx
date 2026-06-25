@@ -75,6 +75,7 @@ interface Collection {
   name: string
   icon: string
   count: number
+  image?: string
 }
 
 interface Banner {
