@@ -152,7 +152,7 @@ export function Hero() {
                               src={banner.image}
                               alt={banner.header || "Deal Image"}
                               fill
-                              className="object-cover rounded-xl shadow-lg border-2 border-white pointer-events-none"
+                              className="object-contain rounded-xl shadow-lg border-2 border-white pointer-events-none"
                               priority
                             />
                           </div>
@@ -213,7 +213,7 @@ export function Hero() {
                             src={slide.image}
                             alt={slide.title}
                             fill
-                            className="object-cover rounded-xl shadow-lg border-2 border-white pointer-events-none"
+                            className="object-contain rounded-xl shadow-lg border-2 border-white pointer-events-none"
                             priority
                           />
                         </div>
