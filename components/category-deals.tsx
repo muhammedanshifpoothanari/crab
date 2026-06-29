@@ -52,15 +52,27 @@ export function CategoryDeals() {
     })
   }
 
-  // Filter products by dynamic groups
-  const diningDeals = products.filter((p) => p.category === "couples").slice(0, 4)
-  const fashionDeals = products.filter((p) => p.category === "superheroes" || p.category === "sports").slice(0, 8)
-  const corporateDeals = products.filter((p) => p.category === "professionals").slice(0, 4)
+  const getEvenSlice = (arr: Product[], maxLimit: number = 8) => {
+    const count = arr.length
+    if (count > 4) {
+      const target = count % 2 === 0 ? count : count - 1
+      return arr.slice(0, Math.min(target, maxLimit))
+    }
+    return arr.slice(0, 4)
+  }
+
+  // Filter products by dynamic groups with dynamic even slices
+  const diningDeals = getEvenSlice(products.filter((p) => p.category === "couples"), 8)
+  const fashionDeals = getEvenSlice(products.filter((p) => p.category === "superheroes" || p.category === "sports"), 8)
+  const corporateDeals = getEvenSlice(products.filter((p) => p.category === "professionals"), 8)
 
   if (loading || products.length === 0) return null
 
-  const renderTrack = (title: string, items: Product[], isTwoRows: boolean = false) => {
+  const renderTrack = (title: string, items: Product[]) => {
     if (items.length === 0) return null
+    // Automatically use 2 rows if we have an even number of products > 4
+    const isTwoRows = items.length > 4 && items.length % 2 === 0
+
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -136,7 +148,7 @@ export function CategoryDeals() {
     <section className="py-2 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
         {renderTrack("Best in Dining & Food Vouchers", diningDeals)}
-        {renderTrack("Top in Fashion & Active Vouchers", fashionDeals, true)}
+        {renderTrack("Top in Fashion & Active Vouchers", fashionDeals)}
         {renderTrack("Premium Corporate Gift Vouchers", corporateDeals)}
       </div>
     </section>
