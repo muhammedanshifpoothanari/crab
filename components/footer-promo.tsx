@@ -1,8 +1,50 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Sparkles } from "lucide-react"
+import { toast } from "sonner"
 
 export function FooterPromo() {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+
+  useEffect(() => {
+    // Register service worker for PWA support
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => console.log("PWA Service Worker registered with scope:", reg.scope))
+        .catch((err) => console.error("PWA Service Worker registration failed:", err))
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    }
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
+    }
+  }, [])
+
+  const handleInstallClick = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      console.log(`PWA install prompt user choice outcome: ${outcome}`)
+      setDeferredPrompt(null)
+    } else {
+      toast.info(
+        "To install, tap the share/menu button in your browser and select 'Add to Home Screen'.",
+        {
+          duration: 6000,
+        }
+      )
+    }
+  }
+
   return (
     <section className="px-4 py-8 bg-white border-t border-gray-100">
       <div className="container mx-auto max-w-7xl">
@@ -22,22 +64,18 @@ export function FooterPromo() {
           </div>
 
           <div className="flex gap-3 w-full md:w-auto justify-start md:justify-end">
-            <a
-              href="https://play.google.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 transition-colors shadow-sm"
+            <button
+              onClick={handleInstallClick}
+              className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
             >
               Get Android App
-            </a>
-            <a
-              href="https://apple.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-5 py-2.5 bg-[#ec2652] text-white rounded-xl text-xs font-black hover:bg-[#d41c45] transition-colors shadow-sm"
+            </button>
+            <button
+              onClick={handleInstallClick}
+              className="px-5 py-2.5 bg-[#ec2652] text-white rounded-xl text-xs font-black hover:bg-[#d41c45] transition-colors shadow-sm cursor-pointer"
             >
               Get iOS App
-            </a>
+            </button>
           </div>
         </div>
       </div>

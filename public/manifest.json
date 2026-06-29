@@ -1,0 +1,17 @@
+{
+  "name": "CrabsCart - Personalized Gifts",
+  "short_name": "CrabsCart",
+  "description": "Create unique personalized gifts with CrabsCart. Custom figurines, caricatures, and collectibles.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ec2652",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

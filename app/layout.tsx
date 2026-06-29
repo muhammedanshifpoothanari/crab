@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   description:
     "Create unique personalized gifts with CrabsCart. Custom figurines, caricatures, and collectibles for every special occasion.",
   generator: "anshif.dev",
+  manifest: "/manifest.json",
   icons: {
     icon: "/icon.png",
     apple: "/icon.png",
