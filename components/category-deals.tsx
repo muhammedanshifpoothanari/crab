@@ -54,12 +54,12 @@ export function CategoryDeals() {
 
   // Filter products by dynamic groups
   const diningDeals = products.filter((p) => p.category === "couples").slice(0, 4)
-  const fashionDeals = products.filter((p) => p.category === "superheroes" || p.category === "sports").slice(0, 4)
+  const fashionDeals = products.filter((p) => p.category === "superheroes" || p.category === "sports").slice(0, 8)
   const corporateDeals = products.filter((p) => p.category === "professionals").slice(0, 4)
 
   if (loading || products.length === 0) return null
 
-  const renderTrack = (title: string, items: Product[]) => {
+  const renderTrack = (title: string, items: Product[], isTwoRows: boolean = false) => {
     if (items.length === 0) return null
     return (
       <div className="mb-8">
@@ -68,7 +68,10 @@ export function CategoryDeals() {
           <span className="text-[11px] font-bold text-gray-400">Scroll for more</span>
         </div>
 
-        <div className="flex overflow-x-auto gap-4 pb-3 scrollbar-none">
+        <div className={isTwoRows 
+          ? "grid grid-rows-2 grid-flow-col gap-4 overflow-x-auto pb-3 scrollbar-none"
+          : "flex overflow-x-auto gap-4 pb-3 scrollbar-none"
+        }>
           {items.map((product) => {
             const isFav = !!favorites[product.id]
             const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -133,7 +136,7 @@ export function CategoryDeals() {
     <section className="py-2 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
         {renderTrack("Best in Dining & Food Vouchers", diningDeals)}
-        {renderTrack("Top in Fashion & Active Vouchers", fashionDeals)}
+        {renderTrack("Top in Fashion & Active Vouchers", fashionDeals, true)}
         {renderTrack("Premium Corporate Gift Vouchers", corporateDeals)}
       </div>
     </section>
