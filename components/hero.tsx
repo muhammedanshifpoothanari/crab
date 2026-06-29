@@ -115,11 +115,11 @@ export function Hero() {
   return (
     <section className="px-4 py-4 md:py-6 bg-white overflow-hidden">
       <div className="container mx-auto max-w-7xl">
-        <Carousel setApi={setApi} className="w-full relative cursor-default" opts={{ loop: true }}>
-          <CarouselContent className="-ml-0 cursor-default">
+        <Carousel setApi={setApi} className="w-full relative" opts={{ loop: true }}>
+          <CarouselContent className="-ml-0">
             {hasDbBanners
               ? dbBanners.map((banner, idx) => (
-                  <CarouselItem key={banner.id || idx} className="pl-0 basis-full cursor-default">
+                  <CarouselItem key={banner.id || idx} className="pl-0 basis-full">
                     {banner.header || banner.tag ? (
                       /* Render dynamic custom banner formatted as a structured card (Magicpin style) */
                       <div className="relative rounded-2xl overflow-hidden bg-[#fff0f3] p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm select-none">
@@ -185,7 +185,7 @@ export function Hero() {
                   </CarouselItem>
                 ))
               : fallbackSlides.map((slide, idx) => (
-                  <CarouselItem key={idx} className="pl-0 basis-full cursor-default">
+                  <CarouselItem key={idx} className="pl-0 basis-full">
                     <div className={`relative rounded-2xl overflow-hidden ${slide.bgColor} p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm select-none`}>
                       {/* Left Content */}
                       <div className="flex-1 space-y-4 md:space-y-5 max-w-lg z-10 text-left">
