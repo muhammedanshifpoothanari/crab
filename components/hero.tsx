@@ -146,8 +146,8 @@ export function Hero() {
                         </div>
 
                         {/* Right Content: Uploaded Side Image */}
-                        <div className="flex-1 relative w-full h-[150px] sm:h-[200px] md:h-[300px] mt-4 md:mt-0 flex justify-center md:justify-end z-10">
-                          <div className="relative w-[150px] sm:w-[200px] md:w-[280px] h-full">
+                        <div className="flex-1 relative w-full h-[120px] sm:h-[160px] md:h-[240px] mt-4 md:mt-0 flex justify-center md:justify-end z-10">
+                          <div className="relative w-[120px] sm:w-[160px] md:w-[240px] h-full">
                             <Image
                               src={banner.image}
                               alt={banner.header || "Deal Image"}
@@ -207,8 +207,8 @@ export function Hero() {
                       </div>
 
                       {/* Right Content */}
-                      <div className="flex-1 relative w-full h-[150px] sm:h-[200px] md:h-[300px] mt-4 md:mt-0 flex justify-center md:justify-end z-10">
-                        <div className="relative w-[150px] sm:w-[200px] md:w-[280px] h-full">
+                      <div className="flex-1 relative w-full h-[120px] sm:h-[160px] md:h-[240px] mt-4 md:mt-0 flex justify-center md:justify-end z-10">
+                        <div className="relative w-[120px] sm:w-[160px] md:w-[240px] h-full">
                           <Image
                             src={slide.image}
                             alt={slide.title}
