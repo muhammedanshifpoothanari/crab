@@ -99,13 +99,46 @@ export function Hero() {
   const currentDbBanner = hasDbBanners ? dbBanners[currentIndex] : null
   const currentStaticSlide = !hasDbBanners ? fallbackSlides[currentIndex] : null
 
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+
+  const minSwipeDistance = 50
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+    const totalSlides = dbBanners.length > 0 ? dbBanners.length : fallbackSlides.length
+
+    if (isLeftSwipe) {
+      setCurrentIndex((prev) => (prev + 1) % totalSlides)
+    } else if (isRightSwipe) {
+      setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides)
+    }
+  }
+
   return (
     <section className="px-4 py-4 md:py-6 bg-white">
       <div className="container mx-auto max-w-7xl">
         {hasDbBanners && currentDbBanner ? (
           currentDbBanner.header || currentDbBanner.tag ? (
             /* Render dynamic custom banner formatted as a structured card (Magicpin style) */
-            <div className="relative rounded-2xl overflow-hidden bg-[#fff0f3] p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm">
+            <div 
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="relative rounded-2xl overflow-hidden bg-[#fff0f3] p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm"
+            >
               {/* Left Content */}
               <div className="flex-1 space-y-4 md:space-y-5 max-w-lg z-10 text-left">
                 <span className="inline-block px-3 py-1 text-xs font-bold text-[#ec2652] bg-[#ec2652]/10 rounded-full">
@@ -159,7 +192,12 @@ export function Hero() {
             </div>
           ) : (
             /* Render legacy banner as a full-bleed background image */
-            <div className="relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[3/1] bg-gray-100 shadow-md">
+            <div 
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[3/1] bg-gray-100 shadow-md"
+            >
               {currentDbBanner.link ? (
                 <Link href={currentDbBanner.link}>
                   <Image
@@ -200,7 +238,12 @@ export function Hero() {
         ) : (
           /* Fallback static Magicpin styled slides */
           currentStaticSlide && (
-            <div className={`relative rounded-2xl overflow-hidden ${currentStaticSlide.bgColor} transition-all duration-500 p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm`}>
+            <div 
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className={`relative rounded-2xl overflow-hidden ${currentStaticSlide.bgColor} transition-all duration-500 p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm`}
+            >
               {/* Left Content */}
               <div className="flex-1 space-y-4 md:space-y-5 max-w-lg z-10 text-left">
                 <span className="inline-block px-3 py-1 text-xs font-bold text-[#ec2652] bg-[#ec2652]/10 rounded-full">
