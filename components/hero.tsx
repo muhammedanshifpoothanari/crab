@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel"
 
 interface DbBanner {
   id: string
@@ -64,8 +65,9 @@ const fallbackSlides: StaticSlide[] = [
 
 export function Hero() {
   const [dbBanners, setDbBanners] = useState<DbBanner[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [api, setApi] = useState<CarouselApi>()
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
     fetch("/api/banners")
@@ -86,212 +88,157 @@ export function Hero() {
       })
   }, [])
 
-  // Auto-scroll slides
+  // Sync Carousel Index
   useEffect(() => {
-    const totalSlides = dbBanners.length > 0 ? dbBanners.length : fallbackSlides.length
+    if (!api) return
+    api.on("select", () => {
+      setCurrentIndex(api.selectedScrollSnap())
+    })
+  }, [api])
+
+  // Autoplay functionality synced with Embla API
+  useEffect(() => {
+    if (!api) return
+    const total = dbBanners.length > 0 ? dbBanners.length : fallbackSlides.length
+    if (total <= 1) return
+
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % totalSlides)
+      const nextIndex = (api.selectedScrollSnap() + 1) % total
+      api.scrollTo(nextIndex)
     }, 5000)
+
     return () => clearInterval(interval)
-  }, [dbBanners.length])
+  }, [api, dbBanners.length])
 
   const hasDbBanners = dbBanners.length > 0
-  const currentDbBanner = hasDbBanners ? dbBanners[currentIndex] : null
-  const currentStaticSlide = !hasDbBanners ? fallbackSlides[currentIndex] : null
-
-  const [touchStart, setTouchStart] = useState<number | null>(null)
-  const [touchEnd, setTouchEnd] = useState<number | null>(null)
-
-  const minSwipeDistance = 50
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null)
-    setTouchStart(e.targetTouches[0].clientX)
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX)
-  }
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
-    const distance = touchStart - touchEnd
-    const isLeftSwipe = distance > minSwipeDistance
-    const isRightSwipe = distance < -minSwipeDistance
-    const totalSlides = dbBanners.length > 0 ? dbBanners.length : fallbackSlides.length
-
-    if (isLeftSwipe) {
-      setCurrentIndex((prev) => (prev + 1) % totalSlides)
-    } else if (isRightSwipe) {
-      setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides)
-    }
-  }
 
   return (
-    <section className="px-4 py-4 md:py-6 bg-white">
+    <section className="px-4 py-4 md:py-6 bg-white overflow-hidden">
       <div className="container mx-auto max-w-7xl">
-        {hasDbBanners && currentDbBanner ? (
-          currentDbBanner.header || currentDbBanner.tag ? (
-            /* Render dynamic custom banner formatted as a structured card (Magicpin style) */
-            <div 
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              className="relative rounded-2xl overflow-hidden bg-[#fff0f3] p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm"
-            >
-              {/* Left Content */}
-              <div className="flex-1 space-y-4 md:space-y-5 max-w-lg z-10 text-left">
-                <span className="inline-block px-3 py-1 text-xs font-bold text-[#ec2652] bg-[#ec2652]/10 rounded-full">
-                  {currentDbBanner.tag || "Offer"}
-                </span>
-                <h1 className="text-2xl md:text-4xl font-black tracking-tight leading-tight text-slate-800">
-                  {currentDbBanner.header}
-                </h1>
-                {currentDbBanner.description && (
-                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed font-semibold">
-                    {currentDbBanner.description}
-                  </p>
-                )}
-                {currentDbBanner.link && (
-                  <Link href={currentDbBanner.link} className="inline-block">
-                    <button className="px-5 py-2.5 bg-[#ec2652] hover:bg-[#d41c45] text-white font-extrabold rounded-full shadow-md transition-transform hover:scale-105 duration-300 text-xs md:text-sm">
-                      Get Deal
-                    </button>
-                  </Link>
-                )}
-              </div>
+        <Carousel setApi={setApi} className="w-full relative" opts={{ loop: true }}>
+          <CarouselContent className="-ml-0">
+            {hasDbBanners
+              ? dbBanners.map((banner, idx) => (
+                  <CarouselItem key={banner.id || idx} className="pl-0 basis-full">
+                    {banner.header || banner.tag ? (
+                      /* Render dynamic custom banner formatted as a structured card (Magicpin style) */
+                      <div className="relative rounded-2xl overflow-hidden bg-[#fff0f3] p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm select-none">
+                        {/* Left Content */}
+                        <div className="flex-1 space-y-4 md:space-y-5 max-w-lg z-10 text-left">
+                          <span className="inline-block px-3 py-1 text-xs font-bold text-[#ec2652] bg-[#ec2652]/10 rounded-full">
+                            {banner.tag || "Offer"}
+                          </span>
+                          <h1 className="text-2xl md:text-4xl font-black tracking-tight leading-tight text-slate-800">
+                            {banner.header}
+                          </h1>
+                          {banner.description && (
+                            <p className="text-xs md:text-sm text-slate-600 leading-relaxed font-semibold">
+                              {banner.description}
+                            </p>
+                          )}
+                          {banner.link && (
+                            <Link href={banner.link} className="inline-block">
+                              <button className="px-5 py-2.5 bg-[#ec2652] hover:bg-[#d41c45] text-white font-extrabold rounded-full shadow-md transition-transform hover:scale-105 duration-300 text-xs md:text-sm">
+                                Get Deal
+                              </button>
+                            </Link>
+                          )}
+                        </div>
 
-              {/* Right Content: Uploaded Side Image */}
-              <div className="flex-1 relative w-full h-[200px] md:h-[300px] mt-6 md:mt-0 flex justify-center md:justify-end z-10">
-                <div className="relative w-[200px] md:w-[280px] h-full">
-                  <Image
-                    src={currentDbBanner.image}
-                    alt={currentDbBanner.header || "Deal Image"}
-                    fill
-                    className="object-cover rounded-xl shadow-lg border-2 border-white"
-                    priority
-                  />
-                </div>
-              </div>
+                        {/* Right Content: Uploaded Side Image */}
+                        <div className="flex-1 relative w-full h-[200px] md:h-[300px] mt-6 md:mt-0 flex justify-center md:justify-end z-10">
+                          <div className="relative w-[200px] md:w-[280px] h-full">
+                            <Image
+                              src={banner.image}
+                              alt={banner.header || "Deal Image"}
+                              fill
+                              className="object-cover rounded-xl shadow-lg border-2 border-white pointer-events-none"
+                              priority
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Render legacy banner as a full-bleed background image */
+                      <div className="relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[3/1] bg-gray-100 shadow-md select-none">
+                        {banner.link ? (
+                          <Link href={banner.link}>
+                            <Image
+                              src={banner.image}
+                              alt="Custom Promo Banner"
+                              fill
+                              className="object-cover transition-transform duration-700 hover:scale-102 pointer-events-none"
+                              priority
+                            />
+                          </Link>
+                        ) : (
+                          <Image
+                            src={banner.image}
+                            alt="Custom Promo Banner"
+                            fill
+                            className="object-cover pointer-events-none"
+                            priority
+                          />
+                        )}
+                      </div>
+                    )}
+                  </CarouselItem>
+                ))
+              : fallbackSlides.map((slide, idx) => (
+                  <CarouselItem key={idx} className="pl-0 basis-full">
+                    <div className={`relative rounded-2xl overflow-hidden ${slide.bgColor} p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm select-none`}>
+                      {/* Left Content */}
+                      <div className="flex-1 space-y-4 md:space-y-5 max-w-lg z-10 text-left">
+                        <span className="inline-block px-3 py-1 text-xs font-bold text-[#ec2652] bg-[#ec2652]/10 rounded-full">
+                          {slide.badge}
+                        </span>
+                        <h1 className="text-2xl md:text-4xl font-black tracking-tight leading-tight text-slate-800">
+                          {slide.title}
+                          <span className="text-[#ec2652]">{slide.highlightWord}</span>
+                        </h1>
+                        <p className="text-xs md:text-sm text-slate-600 leading-relaxed font-semibold">
+                          {slide.subtitle}
+                        </p>
+                        <Link href={slide.link} className="inline-block">
+                          <button className="px-5 py-2.5 bg-[#ec2652] hover:bg-[#d41c45] text-white font-extrabold rounded-full shadow-md transition-transform hover:scale-105 duration-300 text-xs md:text-sm">
+                            {slide.buttonText}
+                          </button>
+                        </Link>
+                      </div>
 
-              {/* Page Indicators */}
-              {dbBanners.length > 1 && (
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                  {dbBanners.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        idx === currentIndex ? "w-5 bg-[#ec2652]" : "w-2 bg-slate-300"
-                      }`}
-                      aria-label={`Go to slide ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            /* Render legacy banner as a full-bleed background image */
-            <div 
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              className="relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[3/1] bg-gray-100 shadow-md"
-            >
-              {currentDbBanner.link ? (
-                <Link href={currentDbBanner.link}>
-                  <Image
-                    src={currentDbBanner.image}
-                    alt="Custom Promo Banner"
-                    fill
-                    className="object-cover transition-transform duration-700 hover:scale-102"
-                    priority
-                  />
-                </Link>
-              ) : (
-                <Image
-                  src={currentDbBanner.image}
-                  alt="Custom Promo Banner"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              )}
-              
-              {/* Page Indicators */}
-              {dbBanners.length > 1 && (
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                  {dbBanners.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`h-2 rounded-full transition-all duration-300 ${
-                        idx === currentIndex ? "w-5 bg-[#ec2652]" : "w-2 bg-white/70 shadow-sm"
-                      }`}
-                      aria-label={`Go to slide ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        ) : (
-          /* Fallback static Magicpin styled slides */
-          currentStaticSlide && (
-            <div 
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              className={`relative rounded-2xl overflow-hidden ${currentStaticSlide.bgColor} transition-all duration-500 p-6 md:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[400px] shadow-sm`}
-            >
-              {/* Left Content */}
-              <div className="flex-1 space-y-4 md:space-y-5 max-w-lg z-10 text-left">
-                <span className="inline-block px-3 py-1 text-xs font-bold text-[#ec2652] bg-[#ec2652]/10 rounded-full">
-                  {currentStaticSlide.badge}
-                </span>
-                <h1 className="text-2xl md:text-4xl font-black tracking-tight leading-tight text-slate-800">
-                  {currentStaticSlide.title}
-                  <span className="text-[#ec2652]">{currentStaticSlide.highlightWord}</span>
-                </h1>
-                <p className="text-xs md:text-sm text-slate-600 leading-relaxed font-semibold">
-                  {currentStaticSlide.subtitle}
-                </p>
-                <Link href={currentStaticSlide.link} className="inline-block">
-                  <button className="px-5 py-2.5 bg-[#ec2652] hover:bg-[#d41c45] text-white font-extrabold rounded-full shadow-md transition-transform hover:scale-105 duration-300 text-xs md:text-sm">
-                    {currentStaticSlide.buttonText}
-                  </button>
-                </Link>
-              </div>
-
-              {/* Right Content */}
-              <div className="flex-1 relative w-full h-[200px] md:h-[300px] mt-6 md:mt-0 flex justify-center md:justify-end z-10">
-                <div className="relative w-[200px] md:w-[280px] h-full">
-                  <Image
-                    src={currentStaticSlide.image}
-                    alt={currentStaticSlide.title}
-                    fill
-                    className="object-cover rounded-xl shadow-lg border-2 border-white"
-                    priority
-                  />
-                </div>
-              </div>
-
-              {/* Page Indicators */}
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                {fallbackSlides.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      idx === currentIndex ? "w-5 bg-[#ec2652]" : "w-2 bg-slate-300"
-                    }`}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
+                      {/* Right Content */}
+                      <div className="flex-1 relative w-full h-[200px] md:h-[300px] mt-6 md:mt-0 flex justify-center md:justify-end z-10">
+                        <div className="relative w-[200px] md:w-[280px] h-full">
+                          <Image
+                            src={slide.image}
+                            alt={slide.title}
+                            fill
+                            className="object-cover rounded-xl shadow-lg border-2 border-white pointer-events-none"
+                            priority
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CarouselItem>
                 ))}
-              </div>
+          </CarouselContent>
+
+          {/* Indicators */}
+          {(hasDbBanners ? dbBanners.length : fallbackSlides.length) > 1 && (
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
+              {(hasDbBanners ? dbBanners : fallbackSlides).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => api?.scrollTo(idx)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    idx === currentIndex ? "w-5 bg-[#ec2652]" : "w-2 bg-slate-300/80 shadow-sm"
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
             </div>
-          )
-        )}
+          )}
+        </Carousel>
       </div>
     </section>
   )
