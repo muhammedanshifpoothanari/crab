@@ -9,53 +9,31 @@ import Image from "next/image"
 import type { Product } from "@/lib/product-data"
 
 export function WishlistDrawer({ children }: { children: React.ReactNode }) {
-  const { addToCart } = useCart()
+  const { addToCart, favorites, toggleFavorite } = useCart()
   const [wishlistItems, setWishlistItems] = useState<Product[]>([])
   const [open, setOpen] = useState(false)
 
   const loadWishlist = () => {
-    const saved = localStorage.getItem("wishlist")
-    if (!saved) {
-      setWishlistItems([])
-      return
-    }
-
-    try {
-      const favoritesRecord: Record<number, boolean> = JSON.parse(saved)
-      fetch("/api/products")
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) {
-            const liked = data.filter((p) => !!favoritesRecord[p.id])
-            setWishlistItems(liked)
-          }
-        })
-        .catch((err) => console.error("Failed to load wishlist products:", err))
-    } catch (e) {
-      console.error("Failed to parse wishlist:", e)
-    }
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const liked = data.filter((p) => !!favorites[p.id])
+          setWishlistItems(liked)
+        }
+      })
+      .catch((err) => console.error("Failed to load wishlist products:", err))
   }
 
+  // Reload wishlist items when drawer opens or when favorites changes
   useEffect(() => {
     if (open) {
       loadWishlist()
     }
-  }, [open])
+  }, [open, favorites])
 
   const removeFromWishlist = (productId: number) => {
-    const saved = localStorage.getItem("wishlist")
-    if (!saved) return
-    try {
-      const favoritesRecord = JSON.parse(saved)
-      delete favoritesRecord[productId]
-      localStorage.setItem("wishlist", JSON.stringify(favoritesRecord))
-      setWishlistItems((prev) => prev.filter((p) => p.id !== productId))
-      
-      // Dispatch a custom event to notify components like products.tsx to update their UI state
-      window.dispatchEvent(new Event("wishlist-updated"))
-    } catch (e) {
-      console.error(e)
-    }
+    toggleFavorite(productId)
   }
 
   const handleAddToCart = (product: Product) => {

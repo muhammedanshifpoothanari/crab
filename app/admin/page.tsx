@@ -115,6 +115,8 @@ export default function AdminPage() {
 
   // Abandoned checkouts list & payment settings
   const [abandonedLeads, setAbandonedLeads] = useState<any[]>([])
+  const [abandonedWishlistLeads, setAbandonedWishlistLeads] = useState<any[]>([])
+  const [leadsTab, setLeadsTab] = useState<"carts" | "wishlists">("carts")
   const [adminPaymentSettings, setAdminPaymentSettings] = useState({
     cardEnabled: true,
     upiEnabled: true,
@@ -390,13 +392,20 @@ export default function AdminPage() {
   const fetchAbandonedLeads = async () => {
     setLoadingLeads(true)
     try {
-      const res = await fetch("/api/abandoned")
-      const data = await res.json()
-      if (data && !data.error) {
-        setAbandonedLeads(data)
+      const [resCarts, resWishlists] = await Promise.all([
+        fetch("/api/abandoned"),
+        fetch("/api/abandoned/wishlist")
+      ])
+      const carts = await resCarts.json()
+      const wishlists = await resWishlists.json()
+      if (carts && !carts.error) {
+        setAbandonedLeads(carts)
+      }
+      if (wishlists && !wishlists.error) {
+        setAbandonedWishlistLeads(wishlists)
       }
     } catch (err) {
-      console.error("Error fetching abandoned carts:", err)
+      console.error("Error fetching abandoned carts/wishlists:", err)
     } finally {
       setLoadingLeads(false)
     }
@@ -1726,64 +1735,120 @@ export default function AdminPage() {
                     </Card>
 
                     {/* Panel 2: Abandoned Leads Recovery Workspace */}
-                    <Card className="p-6 border-border bg-card/60 backdrop-blur-xl">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-lg font-bold flex items-center gap-2">
-                          <svg className="h-5 w-5 text-orange-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                          </svg>
-                          <span>Abandoned Carts Leads</span>
-                        </h3>
-                        <span className="text-[9px] px-2 py-0.5 bg-orange-500/10 text-orange-600 font-extrabold uppercase rounded-full">
-                          {abandonedLeads.length} Hot Leads
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-4">Recover prospective buyers who left items in their cart.</p>
+                    <Card className="p-6 border-border bg-card/60 backdrop-blur-xl flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-bold flex items-center gap-2">
+                            <svg className="h-5 w-5 text-orange-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span>Abandoned Leads Workspace</span>
+                          </h3>
+                        </div>
 
-                      <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
-                        {loadingLeads ? (
-                          <div className="py-10 text-center text-xs text-muted-foreground">Syncing hot leads...</div>
-                        ) : abandonedLeads.length === 0 ? (
-                          <div className="py-10 text-center text-xs text-muted-foreground border border-dashed rounded-lg">
-                            No abandoned checkouts currently. Good job!
-                          </div>
-                        ) : (
-                          abandonedLeads.map((lead, idx) => (
-                            <div key={idx} className="p-3 rounded-lg border border-border/20 bg-background/50 flex justify-between items-center text-xs gap-3">
-                              <div className="min-w-0 flex-1">
-                                <p className="font-extrabold text-foreground">
-                                  +91 {lead.phone}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground truncate mt-0.5">
-                                  Items: {lead.items.map((it: any) => `${it.name} (${it.quantity})`).join(", ")}
-                                </p>
-                                <p className="text-[9px] text-muted-foreground/80 mt-0.5">
-                                  Last updated: {new Date(lead.updatedAt).toLocaleTimeString()}
-                                </p>
+                        {/* Leads Sub-tabs */}
+                        <div className="flex gap-2 mb-4 bg-muted/30 p-1 rounded-lg">
+                          <button
+                            type="button"
+                            onClick={() => setLeadsTab("carts")}
+                            className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                              leadsTab === "carts" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            Carts ({abandonedLeads.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setLeadsTab("wishlists")}
+                            className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${
+                              leadsTab === "wishlists" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            Wishlists ({abandonedWishlistLeads.length})
+                          </button>
+                        </div>
+
+                        <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                          {loadingLeads ? (
+                            <div className="py-10 text-center text-xs text-muted-foreground">Syncing hot leads...</div>
+                          ) : leadsTab === "carts" ? (
+                            abandonedLeads.length === 0 ? (
+                              <div className="py-10 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                                No abandoned checkouts currently. Good job!
                               </div>
-                              <div className="text-right flex flex-col items-end gap-1.5">
-                                <span className="font-black text-primary text-sm">₹{lead.total}</span>
-                                <div className="flex gap-1">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => setViewingLeadCart(lead)}
-                                    className="px-2 py-0.5 h-6 text-[9px] font-bold border border-border/80 text-foreground hover:bg-secondary/40 transition-colors uppercase tracking-wider"
-                                  >
-                                    View Cart 🛒
-                                  </Button>
-                                  <a
-                                    href={`https://wa.me/91${lead.phone}?text=Hi! We noticed you left some lovely items in your Crabscart basket. Would you like a special combo discount to finalize your order?`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-2 py-0.5 h-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[9px] rounded uppercase tracking-wider flex items-center justify-center transition-all shadow shadow-emerald-700/10"
-                                  >
-                                    Recover
-                                  </a>
+                            ) : (
+                              abandonedLeads.map((lead, idx) => (
+                                <div key={idx} className="p-3 rounded-lg border border-border/20 bg-background/50 flex justify-between items-center text-xs gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-extrabold text-foreground">
+                                      +91 {lead.phone}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                      Items: {lead.items.map((it: any) => `${it.name} (${it.quantity})`).join(", ")}
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground/80 mt-0.5">
+                                      Last updated: {new Date(lead.updatedAt).toLocaleTimeString()}
+                                    </p>
+                                  </div>
+                                  <div className="text-right flex flex-col items-end gap-1.5 flex-shrink-0">
+                                    <span className="font-black text-primary text-xs md:text-sm">₹{lead.total}</span>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setViewingLeadCart(lead)}
+                                        className="px-2 py-0.5 h-6 text-[9px] font-bold border border-border/80 text-foreground hover:bg-secondary/40 transition-colors uppercase tracking-wider"
+                                      >
+                                        View Cart 🛒
+                                      </Button>
+                                      <a
+                                        href={`https://wa.me/91${lead.phone}?text=Hi! We noticed you left some lovely items in your Crabscart basket. Would you like a special combo discount to finalize your order?`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-2 py-0.5 h-6 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[9px] rounded uppercase tracking-wider flex items-center justify-center transition-all shadow shadow-emerald-700/10"
+                                      >
+                                        Recover
+                                      </a>
+                                    </div>
+                                  </div>
                                 </div>
+                              ))
+                            )
+                          ) : (
+                            abandonedWishlistLeads.length === 0 ? (
+                              <div className="py-10 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+                                No wishlists recorded currently.
                               </div>
-                            </div>
-                          ))
-                        )}
+                            ) : (
+                              abandonedWishlistLeads.map((lead, idx) => (
+                                <div key={idx} className="p-3 rounded-lg border border-border/20 bg-background/50 flex justify-between items-center text-xs gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-extrabold text-foreground">
+                                      +91 {lead.phone}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                      Liked: {lead.items.map((it: any) => it.name).join(", ")}
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground/80 mt-0.5">
+                                      Last updated: {new Date(lead.updatedAt).toLocaleTimeString()}
+                                    </p>
+                                  </div>
+                                  <div className="text-right flex flex-col items-end gap-1.5 flex-shrink-0">
+                                    <div className="flex gap-1">
+                                      <a
+                                        href={`https://wa.me/91${lead.phone}?text=Hi! We noticed you favorited ${lead.items.length > 0 ? lead.items[0].name : "items"} on Crabscart. Would you like a special offer or custom coupon to complete your order?`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[9px] rounded uppercase tracking-wider flex items-center justify-center transition-all shadow shadow-emerald-700/10"
+                                      >
+                                        Retarget 💬
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            )
+                          )}
+                        </div>
                       </div>
                     </Card>
                   </div>

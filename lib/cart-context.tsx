@@ -23,6 +23,12 @@ interface CartContextType {
   applyPromoCode: (code: string) => Promise<boolean>
   whatsappCheckoutEnabled: boolean
   adminWhatsAppNumber: string
+  
+  // Wishlist support inside context
+  favorites: Record<number, boolean>
+  toggleFavorite: (productId: number) => void
+  phone: string
+  setPhone: (phone: string) => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -38,15 +44,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [adminWhatsAppNumber, setAdminWhatsAppNumber] = useState("919778300633")
 
   // Phone Interceptor States
+  const [phone, setPhoneState] = useState("")
   const [showPhonePrompt, setShowPhonePrompt] = useState(false)
-  const [pendingProduct, setPendingProduct] = useState<Product | null>(null)
-  const [pendingQuantity, setPendingQuantity] = useState(1)
+  const [pendingAction, setPendingAction] = useState<{ type: "cart" | "wishlist"; product?: Product; quantity?: number; productId?: number } | null>(null)
   const [phoneNumberInput, setPhoneNumberInput] = useState("")
+
+  // Wishlist states
+  const [favorites, setFavorites] = useState<Record<number, boolean>>({})
 
   const { toast } = useToast()
 
   // 1. Client-side Hydration
   useEffect(() => {
+    // Check session or local storage for phone number
+    const savedPhone = sessionStorage.getItem("customer_phone") || localStorage.getItem("customer_phone") || ""
+    if (savedPhone) {
+      setPhoneState(savedPhone)
+    }
+
     const savedCart = localStorage.getItem("cart_items")
     if (savedCart) {
       try {
@@ -72,8 +87,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         console.error("Failed to parse cart items:", e)
       }
     }
+
+    const savedWishlist = localStorage.getItem("wishlist")
+    if (savedWishlist) {
+      try {
+        setFavorites(JSON.parse(savedWishlist))
+      } catch (e) {
+        console.error("Failed to parse wishlist:", e)
+      }
+    }
+
     setIsHydrated(true)
 
+    // Load admin settings
     fetch("/api/settings")
       .then(res => res.json())
       .then(data => {
@@ -85,7 +111,53 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .catch(err => console.error("Error fetching settings:", err))
   }, [])
 
-  // 2. Local Storage Sync
+  // Sync / Load Customer Data when phone is set
+  useEffect(() => {
+    if (!isHydrated || !phone) return
+
+    const loadCustomerRemoteData = async () => {
+      try {
+        const res = await fetch(`/api/customer-data?phone=${phone}`)
+        const data = await res.json()
+        if (res.ok && data) {
+          // Merge Cart Items
+          if (data.cartItems && data.cartItems.length > 0) {
+            setItems(prevItems => {
+              const merged = [...prevItems]
+              data.cartItems.forEach((dbItem: any) => {
+                const idx = merged.findIndex(i => i.id === dbItem.id)
+                if (idx > -1) {
+                  merged[idx].quantity = Math.max(merged[idx].quantity, dbItem.quantity)
+                } else {
+                  merged.push(dbItem)
+                }
+              })
+              return merged
+            })
+          }
+
+          // Merge Wishlist Items
+          if (data.wishlistItems && data.wishlistItems.length > 0) {
+            setFavorites(prevFavs => {
+              const merged = { ...prevFavs }
+              data.wishlistItems.forEach((dbItem: any) => {
+                merged[dbItem.id] = true
+              })
+              localStorage.setItem("wishlist", JSON.stringify(merged))
+              window.dispatchEvent(new Event("wishlist-updated"))
+              return merged
+            })
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch customer remote data:", e)
+      }
+    }
+
+    loadCustomerRemoteData()
+  }, [phone, isHydrated])
+
+  // Sync Cart Items to LocalStorage and DB
   useEffect(() => {
     if (!isHydrated) return
 
@@ -94,7 +166,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } else {
       localStorage.removeItem("cart_items")
     }
-  }, [items, isHydrated])
+
+    // Sync to DB if phone exists
+    if (phone) {
+      fetch("/api/customer-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone,
+          cartItems: items
+        })
+      }).catch(err => console.error("Error syncing cart data:", err))
+    }
+  }, [items, phone, isHydrated])
+
+  const setPhone = (num: string) => {
+    const cleanNum = num.trim()
+    setPhoneState(cleanNum)
+    if (typeof window !== "undefined") {
+      if (cleanNum) {
+        sessionStorage.setItem("customer_phone", cleanNum)
+        localStorage.setItem("customer_phone", cleanNum)
+      } else {
+        sessionStorage.removeItem("customer_phone")
+        localStorage.removeItem("customer_phone")
+      }
+    }
+  }
 
   const actualAddToCart = (product: Product, quantityToAdd: number = 1) => {
     const existing = items.find((item) => item.id === product.id)
@@ -121,10 +219,61 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const addToCart = (product: Product, quantityToAdd: number = 1) => {
+    const currentPhone = sessionStorage.getItem("customer_phone") || localStorage.getItem("customer_phone") || phone
+    if (!currentPhone) {
+      setPendingAction({ type: "cart", product, quantity: quantityToAdd })
+      setShowPhonePrompt(true)
+      return
+    }
     actualAddToCart(product, quantityToAdd)
   }
 
-  const handlePhoneSubmit = (e: React.FormEvent) => {
+  const toggleFavorite = (productId: number) => {
+    const currentPhone = sessionStorage.getItem("customer_phone") || localStorage.getItem("customer_phone") || phone
+    if (!currentPhone) {
+      setPendingAction({ type: "wishlist", productId })
+      setShowPhonePrompt(true)
+      return
+    }
+
+    setFavorites((prev) => {
+      const updated = {
+        ...prev,
+        [productId]: !prev[productId]
+      }
+      localStorage.setItem("wishlist", JSON.stringify(updated))
+      
+      // Sync to DB
+      syncWishlistToDb(currentPhone, updated)
+      
+      window.dispatchEvent(new Event("wishlist-updated"))
+      return updated
+    })
+  }
+
+  const syncWishlistToDb = async (phoneNumber: string, favsRecord: Record<number, boolean>) => {
+    try {
+      const likedIds = Object.keys(favsRecord).filter(id => !!favsRecord[Number(id)]).map(Number)
+      const res = await fetch("/api/products")
+      const products: Product[] = await res.json()
+      if (Array.isArray(products)) {
+        const wishlistItems = products.filter(p => likedIds.includes(p.id))
+        
+        await fetch("/api/customer-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: phoneNumber,
+            wishlistItems
+          })
+        })
+      }
+    } catch (e) {
+      console.error("Failed to sync wishlist to DB:", e)
+    }
+  }
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     let cleanPhone = phoneNumberInput.replace(/[\s-+]/g, "")
     if (cleanPhone.startsWith("0091") && cleanPhone.length === 14) {
@@ -143,16 +292,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
       })
       return
     }
-    localStorage.setItem("customer_phone", cleanPhone)
+
+    setPhone(cleanPhone)
     setShowPhonePrompt(false)
-    if (pendingProduct) {
-      actualAddToCart(pendingProduct, pendingQuantity)
-      setPendingProduct(null)
-      setPendingQuantity(1)
+
+    // Execute pending action
+    if (pendingAction) {
+      if (pendingAction.type === "cart" && pendingAction.product) {
+        actualAddToCart(pendingAction.product, pendingAction.quantity || 1)
+      } else if (pendingAction.type === "wishlist" && pendingAction.productId) {
+        const pId = pendingAction.productId
+        setFavorites((prev) => {
+          const updated = {
+            ...prev,
+            [pId]: !prev[pId]
+          }
+          localStorage.setItem("wishlist", JSON.stringify(updated))
+          syncWishlistToDb(cleanPhone, updated)
+          window.dispatchEvent(new Event("wishlist-updated"))
+          return updated
+        })
+      }
+      setPendingAction(null)
     }
+
     toast({
       title: "Mobile number verified!",
-      description: "Cart has been saved and linked to your mobile phone number.",
+      description: "Your session has been saved and linked to your mobile phone number.",
     })
   }
 
@@ -219,39 +385,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Dynamic auto combo discounts
   let discountPercentage = 0
   if (itemCount === 2) {
-    discountPercentage = 10 // 10% discount for buying 2 items
+    discountPercentage = 10
   } else if (itemCount >= 3) {
-    discountPercentage = 15 // 15% discount for buying 3 or more items
+    discountPercentage = 15
   }
 
-  // Use the higher discount between promo and automatic combo
   const finalDiscountPct = Math.max(discountPercentage, promoDiscountPct)
   const discount = Math.round(subtotal * (finalDiscountPct / 100))
   const total = subtotal - discount
-
-  // Dynamic real-time sync of abandoned checkout in MongoDB Atlas
-  useEffect(() => {
-    if (!isHydrated) return
-
-    const savedPhone = typeof window !== "undefined" ? localStorage.getItem("customer_phone") : null
-    if (!savedPhone) return
-
-    fetch("/api/abandoned", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        phone: savedPhone,
-        items: items.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image
-        })),
-        total: total,
-      })
-    }).catch(err => console.error("Error syncing abandoned checkout:", err))
-  }, [items, total, isHydrated])
 
   return (
     <CartContext.Provider
@@ -270,6 +411,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         applyPromoCode,
         whatsappCheckoutEnabled,
         adminWhatsAppNumber,
+        favorites,
+        toggleFavorite,
+        phone,
+        setPhone
       }}
     >
       {children}
@@ -286,7 +431,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             <div>
               <h3 className="text-lg font-bold text-foreground">Verify Your Mobile</h3>
               <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
-                Please enter your 10-digit Mobile Number to add this item to your cart and track your order.
+                Please enter your 10-digit Mobile Number to continue and sync your wishlist and cart.
               </p>
             </div>
 
@@ -314,7 +459,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                   type="submit"
                   className="flex-1 h-9 rounded-md bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/95 transition-colors shadow-md shadow-primary/20"
                 >
-                  Verify & Add
+                  Verify & Continue
                 </button>
               </div>
             </form>

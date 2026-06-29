@@ -9,29 +9,11 @@ import Link from "next/link"
 import type { Product } from "@/lib/product-data"
 
 export function Products() {
-  const { addToCart } = useCart()
+  const { addToCart, favorites, toggleFavorite } = useCart()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [favorites, setFavorites] = useState<Record<number, boolean>>({})
 
-  // Load wishlist from localStorage on mount
   useEffect(() => {
-    const loadFavorites = () => {
-      const saved = localStorage.getItem("wishlist")
-      if (saved) {
-        try {
-          setFavorites(JSON.parse(saved))
-        } catch (e) {
-          console.error("Failed to parse wishlist:", e)
-        }
-      } else {
-        setFavorites({})
-      }
-    }
-
-    loadFavorites()
-    window.addEventListener("wishlist-updated", loadFavorites)
-
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => {
@@ -47,23 +29,12 @@ export function Products() {
         console.error("Failed to load storefront products:", err)
         setLoading(false)
       })
-
-    return () => {
-      window.removeEventListener("wishlist-updated", loadFavorites)
-    }
   }, [])
 
-  const toggleFavorite = (productId: number, e: React.MouseEvent) => {
+  const handleFavoriteClick = (productId: number, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setFavorites(prev => {
-      const updated = {
-        ...prev,
-        [productId]: !prev[productId]
-      }
-      localStorage.setItem("wishlist", JSON.stringify(updated))
-      return updated
-    })
+    toggleFavorite(productId)
   }
 
   const bestSellers = products.slice(0, 8)
@@ -106,7 +77,7 @@ export function Products() {
 
                   {/* Favorite Button at top-right */}
                   <button
-                    onClick={(e) => toggleFavorite(product.id, e)}
+                    onClick={(e) => handleFavoriteClick(product.id, e)}
                     className="absolute top-4 right-4 z-10 p-1.5 rounded-full bg-white/95 backdrop-blur-sm border border-gray-100 shadow-sm hover:scale-110 transition-transform duration-300"
                   >
                     <Heart

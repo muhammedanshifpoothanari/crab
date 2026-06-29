@@ -9,28 +9,11 @@ import Link from "next/link"
 import type { Product } from "@/lib/product-data"
 
 export function CategoryDeals() {
-  const { addToCart } = useCart()
+  const { addToCart, favorites, toggleFavorite } = useCart()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [favorites, setFavorites] = useState<Record<number, boolean>>({})
 
   useEffect(() => {
-    const loadFavorites = () => {
-      const saved = localStorage.getItem("wishlist")
-      if (saved) {
-        try {
-          setFavorites(JSON.parse(saved))
-        } catch (e) {
-          console.error("Failed to parse wishlist:", e)
-        }
-      } else {
-        setFavorites({})
-      }
-    }
-
-    loadFavorites()
-    window.addEventListener("wishlist-updated", loadFavorites)
-
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => {
@@ -43,23 +26,12 @@ export function CategoryDeals() {
         console.error("Failed to load category products:", err)
         setLoading(false)
       })
-
-    return () => {
-      window.removeEventListener("wishlist-updated", loadFavorites)
-    }
   }, [])
 
-  const toggleFavorite = (productId: number, e: React.MouseEvent) => {
+  const handleFavoriteClick = (productId: number, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setFavorites((prev) => {
-      const updated = {
-        ...prev,
-        [productId]: !prev[productId],
-      }
-      localStorage.setItem("wishlist", JSON.stringify(updated))
-      return updated
-    })
+    toggleFavorite(productId)
   }
 
   const getEvenSlice = (arr: Product[], maxLimit: number = 8) => {
@@ -107,7 +79,7 @@ export function CategoryDeals() {
                   </span>
 
                   <button
-                    onClick={(e) => toggleFavorite(product.id, e)}
+                    onClick={(e) => handleFavoriteClick(product.id, e)}
                     className="absolute top-4 right-4 z-10 p-1 rounded-full bg-white/95 border border-gray-100 shadow-sm"
                   >
                     <Heart className={`h-3 w-3 ${isFav ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
