@@ -9,10 +9,12 @@ import { Gallery } from "@/components/gallery"
 import { Testimonials } from "@/components/testimonials"
 import { FooterPromo } from "@/components/footer-promo"
 import { Footer } from "@/components/footer"
+import { ConfettiTrigger } from "@/components/confetti-trigger"
 
 export default function Home() {
   return (
     <main className="min-h-screen">
+      <ConfettiTrigger />
       <Navbar />
       <Hero />
       <Features />
