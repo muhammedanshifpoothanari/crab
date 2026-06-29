@@ -16,14 +16,21 @@ export function Products() {
 
   // Load wishlist from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem("wishlist")
-    if (saved) {
-      try {
-        setFavorites(JSON.parse(saved))
-      } catch (e) {
-        console.error("Failed to parse wishlist:", e)
+    const loadFavorites = () => {
+      const saved = localStorage.getItem("wishlist")
+      if (saved) {
+        try {
+          setFavorites(JSON.parse(saved))
+        } catch (e) {
+          console.error("Failed to parse wishlist:", e)
+        }
+      } else {
+        setFavorites({})
       }
     }
+
+    loadFavorites()
+    window.addEventListener("wishlist-updated", loadFavorites)
 
     fetch("/api/products")
       .then((res) => res.json())
@@ -40,6 +47,10 @@ export function Products() {
         console.error("Failed to load storefront products:", err)
         setLoading(false)
       })
+
+    return () => {
+      window.removeEventListener("wishlist-updated", loadFavorites)
+    }
   }, [])
 
   const toggleFavorite = (productId: number, e: React.MouseEvent) => {

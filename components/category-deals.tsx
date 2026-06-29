@@ -15,15 +15,21 @@ export function CategoryDeals() {
   const [favorites, setFavorites] = useState<Record<number, boolean>>({})
 
   useEffect(() => {
-    // Load wishlist
-    const saved = localStorage.getItem("wishlist")
-    if (saved) {
-      try {
-        setFavorites(JSON.parse(saved))
-      } catch (e) {
-        console.error(e)
+    const loadFavorites = () => {
+      const saved = localStorage.getItem("wishlist")
+      if (saved) {
+        try {
+          setFavorites(JSON.parse(saved))
+        } catch (e) {
+          console.error("Failed to parse wishlist:", e)
+        }
+      } else {
+        setFavorites({})
       }
     }
+
+    loadFavorites()
+    window.addEventListener("wishlist-updated", loadFavorites)
 
     fetch("/api/products")
       .then((res) => res.json())
@@ -37,6 +43,10 @@ export function CategoryDeals() {
         console.error("Failed to load category products:", err)
         setLoading(false)
       })
+
+    return () => {
+      window.removeEventListener("wishlist-updated", loadFavorites)
+    }
   }, [])
 
   const toggleFavorite = (productId: number, e: React.MouseEvent) => {

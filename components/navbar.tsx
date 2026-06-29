@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Search, MapPin, ChevronDown, User } from "lucide-react"
+import { Menu, X, Search, MapPin, ChevronDown, User, Heart } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { CartDrawer } from "@/components/cart-drawer"
+import { WishlistDrawer } from "@/components/wishlist-drawer"
 import { usePathname } from "next/navigation"
 import type { Product } from "@/lib/product-data"
 import Image from "next/image"
@@ -182,12 +183,18 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Right Side: Account & Cart Drawer */}
+        {/* Right Side: Account, Wishlist, & Cart Drawer */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <Link href="/profile" className="hidden sm:flex items-center gap-1 text-slate-700 hover:text-[#ec2652] font-semibold text-sm transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-50">
             <User className="h-4 w-4" />
             <span>Login</span>
           </Link>
+          <WishlistDrawer>
+            <Button variant="ghost" size="icon" className="relative hover:text-[#ec2652] text-slate-700">
+              <Heart className="h-5 w-5" />
+              <span className="sr-only">Wishlist</span>
+            </Button>
+          </WishlistDrawer>
           <CartDrawer />
         </div>
       </div>

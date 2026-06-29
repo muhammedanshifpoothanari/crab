@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, LayoutGrid, Heart, ClipboardList, User } from "lucide-react"
+import { WishlistDrawer } from "@/components/wishlist-drawer"
 
 export function BottomNav() {
   const pathname = usePathname()
@@ -10,7 +11,7 @@ export function BottomNav() {
   const navItems = [
     { label: "Home", icon: Home, href: "/" },
     { label: "Categories", icon: LayoutGrid, href: "/#categories" },
-    { label: "Wishlist", icon: Heart, href: "/#products" },
+    { label: "Wishlist", icon: Heart, href: "/#products", isWishlist: true },
     { label: "Orders", icon: ClipboardList, href: "/profile" },
     { label: "Account", icon: User, href: "/profile" },
   ]
@@ -21,6 +22,20 @@ export function BottomNav() {
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
+
+          if (item.isWishlist) {
+            return (
+              <WishlistDrawer key={item.label}>
+                <button
+                  className="flex flex-col items-center justify-center gap-1 w-16 h-full transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-[10px] tracking-wide">{item.label}</span>
+                </button>
+              </WishlistDrawer>
+            )
+          }
+
           return (
             <Link
               key={item.label}

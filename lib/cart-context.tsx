@@ -121,13 +121,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const addToCart = (product: Product, quantityToAdd: number = 1) => {
-    const savedPhone = typeof window !== "undefined" ? localStorage.getItem("customer_phone") : null
-    if (!savedPhone) {
-      setPendingProduct(product)
-      setPendingQuantity(quantityToAdd)
-      setShowPhonePrompt(true)
-      return
-    }
     actualAddToCart(product, quantityToAdd)
   }
 
