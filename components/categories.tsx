@@ -70,7 +70,7 @@ export function Categories() {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg md:text-xl font-black text-slate-800">Shop by Category</h2>
-          <Link href="/#products" className="text-xs font-bold text-[#ec2652] hover:text-[#d41c45] transition-colors">
+          <Link href="/products" className="text-xs font-bold text-[#ec2652] hover:text-[#d41c45] transition-colors">
             View all
           </Link>
         </div>

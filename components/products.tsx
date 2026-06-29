@@ -54,7 +54,7 @@ export function Products() {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg md:text-xl font-black text-slate-800">Trending Deals & Vouchers</h2>
-          <Link href="/#categories" className="text-xs font-bold text-[#ec2652] hover:text-[#d41c45] transition-colors">
+          <Link href="/products" className="text-xs font-bold text-[#ec2652] hover:text-[#d41c45] transition-colors">
             View all
           </Link>
         </div>
