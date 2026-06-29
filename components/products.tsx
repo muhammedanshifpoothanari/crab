@@ -130,7 +130,7 @@ export function Products() {
                       onClick={() => addToCart(product)}
                       className="w-full mt-2 py-2 bg-[#ec2652] hover:bg-[#d41c45] text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors duration-300"
                     >
-                      Get Voucher
+                      Buy Now
                     </button>
                   </div>
                 </Card>
