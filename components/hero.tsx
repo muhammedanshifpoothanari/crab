@@ -160,7 +160,7 @@ export function Hero() {
                       </div>
                     ) : (
                       /* Render legacy banner as a full-bleed background image */
-                      <div className="relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[3/1] bg-gray-100 shadow-md select-none">
+                      <div className="relative rounded-2xl overflow-hidden aspect-[8/4] md:aspect-[8/3] bg-gray-100 shadow-md select-none">
                         {banner.link ? (
                           <Link href={banner.link}>
                             <Image
