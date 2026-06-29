@@ -160,24 +160,20 @@ export function Hero() {
                       </div>
                     ) : (
                       /* Render legacy banner as a full-bleed background image */
-                      <div className="relative rounded-2xl overflow-hidden aspect-[8/4] md:aspect-[8/3] bg-gray-100 shadow-md select-none">
+                      <div className="relative rounded-2xl overflow-hidden bg-gray-100 shadow-md select-none w-full">
                         {banner.link ? (
                           <Link href={banner.link}>
-                            <Image
+                            <img
                               src={banner.image}
                               alt="Custom Promo Banner"
-                              fill
-                              className="object-cover transition-transform duration-700 hover:scale-102 pointer-events-none"
-                              priority
+                              className="w-full h-auto object-contain transition-transform duration-700 hover:scale-[1.02] pointer-events-none rounded-2xl"
                             />
                           </Link>
                         ) : (
-                          <Image
+                          <img
                             src={banner.image}
                             alt="Custom Promo Banner"
-                            fill
-                            className="object-cover pointer-events-none"
-                            priority
+                            className="w-full h-auto object-contain pointer-events-none rounded-2xl"
                           />
                         )}
                       </div>
