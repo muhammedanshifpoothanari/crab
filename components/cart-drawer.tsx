@@ -173,10 +173,25 @@ export function CartDrawer() {
                 <Button 
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12" 
                   size="lg"
-                  onClick={() => {
+                  onClick={async () => {
                     const itemsSummary = items.map(item => `${item.quantity}x ${item.name} (₹${item.price} each)`).join(", ")
                     const message = encodeURIComponent(`Hi! I'd like to place an order for the following items in my cart: [ ${itemsSummary} ]. Total Amount: ₹${total}. Please let me know how to complete my payment!`)
                     window.open(`https://wa.me/${adminWhatsAppNumber}?text=${message}`, "_blank")
+                    // Silently create a Cold order so admin can follow up
+                    try {
+                      await fetch("/api/orders", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          items: items.map(item => ({ id: item.id, name: item.name, price: item.price, quantity: item.quantity, image: item.image })),
+                          total,
+                          paymentMethod: "WhatsApp",
+                          status: "Cold",
+                        }),
+                      })
+                    } catch (e) {
+                      // Silent fail — WhatsApp already opened
+                    }
                   }}
                 >
                   Checkout via WhatsApp 💬

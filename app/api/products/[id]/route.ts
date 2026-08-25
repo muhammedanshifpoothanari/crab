@@ -11,7 +11,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { db } = await connectToDatabase()
     const body = await request.json()
-    const { name, description, price, originalPrice, image, additionalImages, category, details, features, barcode } = body
+    const { name, description, price, originalPrice, image, additionalImages, category, details, features, barcode, showHowItWorks } = body
 
     const updateFields: any = {}
     if (name !== undefined) updateFields.name = name
@@ -24,6 +24,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (details !== undefined) updateFields.details = details
     if (features !== undefined) updateFields.features = features
     if (barcode !== undefined) updateFields.barcode = barcode
+    if (showHowItWorks !== undefined) updateFields.showHowItWorks = showHowItWorks
 
     const result = await db.collection("products").findOneAndUpdate(
       { id: numericId },

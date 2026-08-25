@@ -22,10 +22,25 @@ export function ProductDetail({ product }: { product: Product }) {
     addToCart(product, quantity)
   }
 
-  const handleBuyItNow = () => {
+  const handleBuyItNow = async () => {
     if (whatsappCheckoutEnabled) {
       const message = encodeURIComponent(`Hi! I am interested in purchasing ${quantity}x ${product.name} (₹${product.price} each) from CrabsCart. Please help me complete the order!`)
       window.open(`https://wa.me/${adminWhatsAppNumber}?text=${message}`, "_blank")
+      // Silently create a Cold order so admin can follow up
+      try {
+        await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: [{ id: product.id, name: product.name, price: product.price, quantity, image: product.image }],
+            total: product.price * quantity,
+            paymentMethod: "WhatsApp",
+            status: "Cold",
+          }),
+        })
+      } catch (e) {
+        // Silent fail — WhatsApp already opened
+      }
       return
     }
     addToCart(product, quantity)
@@ -140,15 +155,17 @@ export function ProductDetail({ product }: { product: Product }) {
               </Button>
             </div>
 
-            <Card className="p-4 border-primary/20">
-              <h3 className="font-semibold mb-2">How It Works</h3>
-              <ol className="text-sm space-y-2 text-muted-foreground">
-                <li>1. Add to cart and complete your order</li>
-                <li>2. Upload your photos via email or WhatsApp</li>
-                <li>3. We'll create a design preview for approval</li>
-                <li>4. Receive your custom figurine in 7-10 days</li>
-              </ol>
-            </Card>
+            {(product.showHowItWorks !== false) && (
+              <Card className="p-4 border-primary/20">
+                <h3 className="font-semibold mb-2">How It Works</h3>
+                <ol className="text-sm space-y-2 text-muted-foreground">
+                  <li>1. Add to cart and complete your order</li>
+                  <li>2. Upload your photos via email or WhatsApp</li>
+                  <li>3. We&apos;ll create a design preview for approval</li>
+                  <li>4. Receive your custom figurine in 7-10 days</li>
+                </ol>
+              </Card>
+            )}
           </div>
         </div>
       </div>

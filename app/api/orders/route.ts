@@ -29,18 +29,28 @@ export async function POST(request: Request) {
   try {
     const { db } = await connectToDatabase()
     const body = await request.json()
-    const { customer, items, total, paymentMethod, paymentDetails } = body
+    const { customer, items, total, paymentMethod, paymentDetails, status } = body
 
-    if (
-      !customer ||
-      !customer.name ||
-      !customer.email ||
-      !customer.address ||
-      !items ||
-      items.length === 0 ||
-      !total
-    ) {
-      return NextResponse.json({ error: "Missing required order/checkout details" }, { status: 400 })
+    const isColdOrder = status === "Cold"
+
+    // Cold orders (WhatsApp leads) only need items + total
+    // Regular orders require full customer + items + total
+    if (!isColdOrder) {
+      if (
+        !customer ||
+        !customer.name ||
+        !customer.email ||
+        !customer.address ||
+        !items ||
+        items.length === 0 ||
+        !total
+      ) {
+        return NextResponse.json({ error: "Missing required order/checkout details" }, { status: 400 })
+      }
+    } else {
+      if (!items || items.length === 0 || !total) {
+        return NextResponse.json({ error: "Cold order requires at least items and total" }, { status: 400 })
+      }
     }
 
     // Generate unique 6-digit e-commerce Order ID, prefix with CC
@@ -50,26 +60,26 @@ export async function POST(request: Request) {
     const newOrder = {
       orderId,
       customer: {
-        name: customer.name.trim(),
-        email: customer.email.trim(),
-        phone: customer.phone ? customer.phone.trim() : "",
-        address: customer.address.trim(),
-        city: customer.city ? customer.city.trim() : "",
-        state: customer.state ? customer.state.trim() : "",
-        zip: customer.zip ? customer.zip.trim() : "",
+        name: customer?.name?.trim() || "WhatsApp Lead",
+        email: customer?.email?.trim() || "crabscart@gmail.com",
+        phone: customer?.phone?.trim() || "",
+        address: customer?.address?.trim() || "",
+        city: customer?.city?.trim() || "",
+        state: customer?.state?.trim() || "",
+        zip: customer?.zip?.trim() || "",
       },
       items,
       total: Number(total),
       paymentMethod: paymentMethod || "Cash on Delivery",
-      paymentDetails: paymentDetails || { paymentStatus: "Pending COD verification" },
-      status: body.status || "Pending",
+      paymentDetails: paymentDetails || { paymentStatus: isColdOrder ? "WhatsApp Lead" : "Pending COD verification" },
+      status: status || "Pending",
       trackingNumber: body.trackingNumber || "",
       createdAt: new Date(),
     }
 
     await db.collection("orders").insertOne(newOrder)
     try {
-      if (customer.phone) {
+      if (customer?.phone) {
         await db.collection("abandoned_carts").deleteOne({ phone: customer.phone.trim() })
       }
     } catch (e) {

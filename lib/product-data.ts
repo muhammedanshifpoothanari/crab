@@ -9,6 +9,8 @@ export interface Product {
   category: string
   details: string
   features: string[]
+  barcode?: string
+  showHowItWorks?: boolean
 }
 
 export const collections = [

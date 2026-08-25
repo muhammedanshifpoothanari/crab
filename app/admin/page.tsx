@@ -64,10 +64,12 @@ interface Product {
   price: number
   originalPrice: number
   image: string
+  additionalImages?: string[]
   category: string
   details: string
   features: string[]
   barcode?: string
+  showHowItWorks?: boolean
 }
 
 interface Collection {
@@ -89,7 +91,7 @@ interface Banner {
 }
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "products" | "customers" | "collections" | "banners" | "marketing" | "settings" | "returns" | "messages">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "products" | "customers" | "collections" | "banners" | "marketing" | "settings" | "returns" | "messages" | "reviews">("overview")
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [collections, setCollections] = useState<Collection[]>([])
@@ -170,6 +172,7 @@ export default function AdminPage() {
     details: "",
     featuresText: "",
     barcode: "",
+    showHowItWorks: true,
   })
 
   // Order Details Modal states
@@ -189,6 +192,8 @@ export default function AdminPage() {
   const [loadingReturns, setLoadingReturns] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [loadingMessages, setLoadingMessages] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [loadingReviews, setLoadingReviews] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [returningOrder, setReturningOrder] = useState<Order | null>(null)
   const [editingReturnId, setEditingReturnId] = useState<string | null>(null)
@@ -274,6 +279,63 @@ export default function AdminPage() {
     }
   }
 
+  const fetchAllReviews = async () => {
+    setLoadingReviews(true)
+    try {
+      const res = await fetch("/api/reviews/all")
+      if (res.ok) {
+        const data = await res.json()
+        setReviews(data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch reviews:", err)
+    } finally {
+      setLoadingReviews(false)
+    }
+  }
+
+  const handleApproveReview = async (id: string) => {
+    try {
+      const res = await fetch(`/api/reviews/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "approved" }),
+      })
+      if (!res.ok) throw new Error("Approve failed")
+      toast.success("Review approved and now visible publicly!")
+      fetchAllReviews()
+    } catch (e: any) {
+      toast.error("Failed to approve review")
+    }
+  }
+
+  const handleRejectReview = async (id: string) => {
+    try {
+      const res = await fetch(`/api/reviews/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "rejected" }),
+      })
+      if (!res.ok) throw new Error("Reject failed")
+      toast.success("Review rejected")
+      fetchAllReviews()
+    } catch (e: any) {
+      toast.error("Failed to reject review")
+    }
+  }
+
+  const handleDeleteReview = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this review?")) return
+    try {
+      const res = await fetch(`/api/reviews/${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Delete failed")
+      toast.success("Review deleted successfully")
+      fetchAllReviews()
+    } catch (e: any) {
+      toast.error("Failed to delete review")
+    }
+  }
+
   useEffect(() => {
     if (typeof window !== "undefined" && sessionStorage.getItem("admin_authenticated") === "true") {
       setIsAdminLoggedIn(true)
@@ -287,6 +349,7 @@ export default function AdminPage() {
     fetchReturns()
     fetchCoupons()
     fetchMessages()
+    fetchAllReviews()
   }, [])
 
   const fetchCoupons = async () => {
@@ -928,6 +991,7 @@ export default function AdminPage() {
         ? productForm.featuresText.split(",").map((f) => f.trim()).filter(Boolean)
         : [],
       barcode: generatedBarcode,
+      showHowItWorks: productForm.showHowItWorks,
     }
 
     try {
@@ -992,6 +1056,7 @@ export default function AdminPage() {
       details: prod.details || "",
       featuresText: prod.features ? prod.features.join(", ") : "",
       barcode: prod.barcode || "",
+      showHowItWorks: prod.showHowItWorks !== false,
     })
     setShowProductModal(true)
   }
@@ -1010,6 +1075,7 @@ export default function AdminPage() {
       details: "",
       featuresText: "",
       barcode: "",
+      showHowItWorks: true,
     })
     setShowProductModal(true)
   }
@@ -1541,6 +1607,21 @@ export default function AdminPage() {
                 </svg>
                 <span>Store & Delivery</span>
               </Button>
+              <Button
+                variant={activeTab === "reviews" ? "secondary" : "ghost"}
+                className="w-full justify-start font-bold h-11 text-sm gap-3"
+                onClick={() => setActiveTab("reviews")}
+              >
+                <svg className="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                <span>Customer Reviews</span>
+                {reviews.filter(r => r.status === "pending").length > 0 && (
+                  <span className="ml-auto bg-amber-500 text-white rounded-full text-xs h-5 px-1.5 flex items-center justify-center font-extrabold">
+                    {reviews.filter(r => r.status === "pending").length}
+                  </span>
+                )}
+              </Button>
             </div>
 
             {/* Main workspace container (col span 9) */}
@@ -1916,6 +1997,9 @@ export default function AdminPage() {
                                 <td className="py-3.5 px-4 font-semibold uppercase tracking-wider">
                                   {order.status === "Pending" && (
                                     <span className="text-[10px] px-2 py-0.5 bg-amber-100 dark:bg-amber-950/40 text-amber-600 rounded font-black">Pending</span>
+                                  )}
+                                  {order.status === "Cold" && (
+                                    <span className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 rounded font-black">💬 Cold Lead</span>
                                   )}
                                   {order.status === "Shipped" && (
                                     <span className="text-[10px] px-2 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-600 rounded font-black">Shipped</span>
@@ -2649,6 +2733,129 @@ export default function AdminPage() {
                   </div>
                 </Card>
               )}
+
+              {/* TAB 9: CUSTOMER REVIEWS */}
+              {activeTab === "reviews" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                      <h3 className="text-lg font-bold">Customer Reviews</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">Approve customer reviews to show them publicly on the homepage testimonials section.</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-muted-foreground font-semibold">Share link with customers:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const link = `${window.location.origin}/review`
+                          navigator.clipboard.writeText(link).then(() => toast.success("Review link copied! Share it via WhatsApp or message."))
+                        }}
+                        className="text-xs px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-lg border border-primary/20 transition-colors flex items-center gap-1.5"
+                      >
+                        📋 Copy Review Link
+                      </button>
+                    </div>
+                  </div>
+
+                  <Card className="border-border">
+                    {loadingReviews ? (
+                      <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+                        Loading reviews...
+                      </div>
+                    ) : reviews.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-4">
+                        <p className="text-muted-foreground text-sm font-semibold">No customer reviews yet</p>
+                        <p className="text-xs text-muted-foreground max-w-sm">Share the review link with your customers. Once they submit a review, it will appear here for your approval.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-secondary/30 border-b border-border text-muted-foreground font-bold uppercase text-[9px] tracking-wider">
+                              <th className="py-3 px-4">Customer</th>
+                              <th className="py-3 px-4">Rating</th>
+                              <th className="py-3 px-4">Review</th>
+                              <th className="py-3 px-4">Status</th>
+                              <th className="py-3 px-4">Date</th>
+                              <th className="py-3 px-4 text-center">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {reviews.map((review: any) => (
+                              <tr key={review._id} className="border-b border-border/20 hover:bg-secondary/10 transition-colors">
+                                <td className="py-3 px-4">
+                                  <p className="font-semibold">{review.name}</p>
+                                  <p className="text-[10px] text-muted-foreground">{review.role}</p>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex gap-0.5">
+                                    {Array.from({ length: review.rating }).map((_: any, i: number) => (
+                                      <span key={i} className="text-amber-400">★</span>
+                                    ))}
+                                    {Array.from({ length: 5 - review.rating }).map((_: any, i: number) => (
+                                      <span key={i} className="text-muted-foreground/30">★</span>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 max-w-[250px]">
+                                  <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">&ldquo;{review.content}&rdquo;</p>
+                                </td>
+                                <td className="py-3 px-4">
+                                  {review.status === "pending" && (
+                                    <span className="text-[10px] px-2 py-0.5 bg-amber-100 dark:bg-amber-950/40 text-amber-600 rounded font-black">Pending</span>
+                                  )}
+                                  {review.status === "approved" && (
+                                    <span className="text-[10px] px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 rounded font-black">Approved ✓</span>
+                                  )}
+                                  {review.status === "rejected" && (
+                                    <span className="text-[10px] px-2 py-0.5 bg-destructive/10 text-destructive rounded font-black">Rejected</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4 text-muted-foreground">
+                                  {new Date(review.createdAt).toLocaleDateString("en-IN")}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex gap-1 justify-center">
+                                    {review.status !== "approved" && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleApproveReview(review._id)}
+                                        className="h-7 px-2 text-[10px] text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-bold"
+                                      >
+                                        ✓ Approve
+                                      </Button>
+                                    )}
+                                    {review.status === "approved" && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleRejectReview(review._id)}
+                                        className="h-7 px-2 text-[10px] text-amber-600 border-amber-200 hover:bg-amber-50 dark:hover:bg-amber-950/30 font-bold"
+                                      >
+                                        Unpublish
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteReview(review._id)}
+                                      className="h-7 px-2 text-[10px] text-destructive hover:bg-destructive/10 font-bold"
+                                    >
+                                      🗑️ Delete
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </Card>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
@@ -2867,6 +3074,21 @@ export default function AdminPage() {
                 />
               </div>
 
+              {/* How It Works toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border/30 bg-secondary/10 mt-1">
+                <div>
+                  <p className="text-xs font-bold">Show &quot;How It Works&quot; card on product page</p>
+                  <p className="text-[10px] text-muted-foreground">Toggle off for products that don&apos;t need photo-upload instructions</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProductForm({ ...productForm, showHowItWorks: !productForm.showHowItWorks })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${productForm.showHowItWorks ? "bg-primary" : "bg-muted"}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${productForm.showHowItWorks ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+              </div>
+
               <Button type="submit" className="w-full mt-6 font-bold shadow-md shadow-primary/20 h-11" disabled={uploadingImage}>
                 {uploadingImage ? "Awaiting media host..." : editingProduct ? "Synchronize Specifications" : "Create Figurine"}
               </Button>
@@ -3011,6 +3233,7 @@ export default function AdminPage() {
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <option value="Pending">Pending review</option>
+                    <option value="Cold">Cold (WhatsApp Lead)</option>
                     <option value="Shipped">Shipped / Dispatched</option>
                     <option value="Delivered">Delivered</option>
                     <option value="Cancelled">Cancelled</option>

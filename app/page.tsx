@@ -21,7 +21,6 @@ export default function Home() {
       <Categories />
       <Products />
       <CategoryDeals />
-      <HowItWorks />
       <Gallery />
       <Testimonials />
       <FooterPromo />
