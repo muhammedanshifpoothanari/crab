@@ -72,6 +72,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     category: product.category || "couples",
     details: product.details || "",
     features: Array.isArray(product.features) ? product.features : [],
+    additionalImages: Array.isArray(product.additionalImages) ? product.additionalImages : [],
+    showHowItWorks: product.showHowItWorks !== false, // default true for existing products
   }
 
   return <ProductDetail product={serializableProduct} />
