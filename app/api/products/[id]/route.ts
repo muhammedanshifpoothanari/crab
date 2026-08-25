@@ -38,7 +38,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     // Invalidate products cache
-    await invalidateCache("products")
+    invalidateCache("products_list")
 
     return NextResponse.json(result)
   } catch (error: any) {
@@ -61,6 +61,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }
+
+    // Invalidate products cache
+    invalidateCache("products_list")
 
     return NextResponse.json({ success: true, message: "Product deleted successfully" })
   } catch (error: any) {
