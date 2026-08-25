@@ -160,6 +160,11 @@ export default function AdminPage() {
   })
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false)
 
+  // Submit button states for better messaging
+  const [productSubmitStatus, setProductSubmitStatus] = useState<"idle" | "loading" | "success">("idle")
+  const [orderSubmitStatus, setOrderSubmitStatus] = useState<"idle" | "loading" | "success">("idle")
+  const [collectionSubmitStatus, setCollectionSubmitStatus] = useState<"idle" | "loading" | "success">("idle")
+
   // Add/Edit Product form state
   const [productForm, setProductForm] = useState({
     name: "",
@@ -600,6 +605,7 @@ export default function AdminPage() {
       return
     }
 
+    setCollectionSubmitStatus("loading")
     try {
       const isEditing = !!editingCollection
       const url = isEditing ? `/api/collections/${editingCollection.id}` : "/api/collections"
@@ -613,14 +619,20 @@ export default function AdminPage() {
 
       if (!res.ok) throw new Error("Failed to save collection")
 
+      setCollectionSubmitStatus("success")
       toast.success(isEditing ? "Collection updated successfully!" : "Collection created successfully!")
-      setShowCollectionModal(false)
-      setCollectionForm({ id: "", name: "", icon: "Heart", image: "" })
-      setEditingCollection(null)
-      fetchCollections()
+      
+      setTimeout(() => {
+        setShowCollectionModal(false)
+        setCollectionSubmitStatus("idle")
+        setCollectionForm({ id: "", name: "", icon: "Heart", image: "" })
+        setEditingCollection(null)
+        fetchCollections()
+      }, 1000)
     } catch (err) {
       console.error(err)
       toast.error("Failed to save collection category")
+      setCollectionSubmitStatus("idle")
     }
   }
 
@@ -997,6 +1009,7 @@ export default function AdminPage() {
       showHowItWorks: productForm.showHowItWorks,
     }
 
+    setProductSubmitStatus("loading")
     try {
       let res
       if (editingProduct) {
@@ -1017,13 +1030,19 @@ export default function AdminPage() {
 
       if (!res.ok) throw new Error("Failed to save product")
       
+      setProductSubmitStatus("success")
       toast.success(editingProduct ? "Product updated successfully!" : "Product created successfully!")
-      setShowProductModal(false)
-      setEditingProduct(null)
-      fetchProducts()
+      
+      setTimeout(() => {
+        setShowProductModal(false)
+        setEditingProduct(null)
+        setProductSubmitStatus("idle")
+        fetchProducts()
+      }, 1000)
     } catch (err: any) {
       console.error(err)
       toast.error(err.message || "Error saving product specs")
+      setProductSubmitStatus("idle")
     }
   }
 
@@ -1088,6 +1107,7 @@ export default function AdminPage() {
     e.preventDefault()
     if (!viewingOrder) return
 
+    setOrderSubmitStatus("loading")
     try {
       const res = await fetch(`/api/orders/${viewingOrder.orderId}`, {
         method: "PUT",
@@ -1097,12 +1117,18 @@ export default function AdminPage() {
 
       if (!res.ok) throw new Error("Order update failed")
       
+      setOrderSubmitStatus("success")
       toast.success("Order details synchronized successfully!")
-      setViewingOrder(null)
-      fetchOrders()
+      
+      setTimeout(() => {
+        setViewingOrder(null)
+        setOrderSubmitStatus("idle")
+        fetchOrders()
+      }, 1000)
     } catch (e: any) {
       console.error(e)
       toast.error("Failed to update order tracking details")
+      setOrderSubmitStatus("idle")
     }
   }
 
@@ -3092,8 +3118,11 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <Button type="submit" className="w-full mt-6 font-bold shadow-md shadow-primary/20 h-11" disabled={uploadingImage}>
-                {uploadingImage ? "Awaiting media host..." : editingProduct ? "Synchronize Specifications" : "Create Figurine"}
+              <Button type="submit" className="w-full mt-6 font-bold shadow-md shadow-primary/20 h-11" disabled={uploadingImage || productSubmitStatus !== "idle"}>
+                {productSubmitStatus === "loading" ? "Synchronizing..." : 
+                 productSubmitStatus === "success" ? "Synchronized ✓" : 
+                 uploadingImage ? "Awaiting media host..." : 
+                 editingProduct ? "Synchronize Specifications" : "Create Figurine"}
               </Button>
             </form>
           </Card>
@@ -3323,8 +3352,15 @@ export default function AdminPage() {
               </div>
 
               <div className="flex flex-col gap-2 mt-4">
-                <Button type="submit" className="w-full font-bold shadow-md shadow-primary/20 h-11">
-                  Synchronize Order Status
+                <Button 
+                  type="submit" 
+                  className={`w-full font-bold shadow-md transition-all ${orderSubmitStatus === "success" ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20" : "bg-primary shadow-primary/20 hover:bg-primary/90"}`} 
+                  size="lg"
+                  disabled={orderSubmitStatus !== "idle"}
+                >
+                  {orderSubmitStatus === "loading" ? "Synchronizing..." : 
+                   orderSubmitStatus === "success" ? "Synchronized ✓" : 
+                   "Synchronize Order Status"}
                 </Button>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
@@ -3876,9 +3912,17 @@ export default function AdminPage() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full mt-6 font-bold shadow-md shadow-primary/20 h-11" disabled={uploadingCollectionImage}>
-                {uploadingCollectionImage ? "Uploading Banner Media..." : editingCollection ? "Synchronize Category" : "Establish Collection"}
-              </Button>
+              <div className="flex gap-3 justify-end pt-2">
+                <Button variant="ghost" type="button" onClick={() => setShowCollectionModal(false)}>
+                  Discard
+                </Button>
+                <Button type="submit" className="px-8 font-bold" disabled={uploadingCollectionImage || collectionSubmitStatus !== "idle"}>
+                  {collectionSubmitStatus === "loading" ? "Synchronizing..." : 
+                   collectionSubmitStatus === "success" ? "Synchronized ✓" : 
+                   uploadingCollectionImage ? "Uploading Banner Media..." : 
+                   editingCollection ? "Synchronize Category" : "Establish Collection"}
+                </Button>
+              </div>
             </form>
           </Card>
         </div>
