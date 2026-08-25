@@ -16,7 +16,10 @@ import { useRouter } from "next/navigation"
 export function ProductDetail({ product }: { product: Product }) {
   const { addToCart, whatsappCheckoutEnabled, adminWhatsAppNumber } = useCart()
   const [quantity, setQuantity] = useState(1)
+  const [activeImage, setActiveImage] = useState(product.image || "/placeholder.svg")
   const router = useRouter()
+
+  const allImages = [product.image || "/placeholder.svg", ...(product.additionalImages || [])].filter(Boolean)
 
   const handleAddToCart = () => {
     addToCart(product, quantity)
@@ -62,15 +65,38 @@ export function ProductDetail({ product }: { product: Product }) {
         </Link>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Left Column: Image */}
-          <div className="relative h-[400px] md:h-[500px] overflow-hidden rounded-2xl border border-border/50 bg-secondary/10">
-            <Image
-              src={product.image || "/placeholder.svg"}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-            />
+          {/* Left Column: Image Gallery */}
+          <div className="flex flex-col gap-4">
+            <div className="relative h-[400px] md:h-[500px] overflow-hidden rounded-2xl border border-border/50 bg-secondary/10">
+              <Image
+                src={activeImage}
+                alt={product.name}
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            
+            {allImages.length > 1 && (
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                      activeImage === img ? "border-primary" : "border-border/50 opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <Image
+                      src={img}
+                      alt={`${product.name} thumbnail ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right Column: Content */}
