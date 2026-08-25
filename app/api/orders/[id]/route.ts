@@ -25,13 +25,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { db } = await connectToDatabase()
     const body = await request.json()
-    const { status, trackingNumber, customerName, paymentStatus } = body
+    const { status, trackingNumber, customerName, customerPhone, customerEmail, customerAddress, paymentStatus } = body
 
     const updateFields: any = {}
     if (status !== undefined) updateFields.status = status
     if (trackingNumber !== undefined) updateFields.trackingNumber = trackingNumber
     if (customerName !== undefined) {
       updateFields["customer.name"] = customerName
+    }
+    if (customerPhone !== undefined) {
+      updateFields["customer.phone"] = customerPhone
+    }
+    if (customerEmail !== undefined) {
+      updateFields["customer.email"] = customerEmail
+    }
+    if (customerAddress !== undefined) {
+      updateFields["customer.address"] = customerAddress
     }
     if (paymentStatus !== undefined) {
       updateFields["paymentDetails.paymentStatus"] = paymentStatus

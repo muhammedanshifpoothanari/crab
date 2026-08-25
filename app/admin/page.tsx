@@ -185,6 +185,9 @@ export default function AdminPage() {
     status: "Pending",
     trackingNumber: "",
     customerName: "",
+    customerPhone: "",
+    customerEmail: "",
+    customerAddress: "",
     paymentStatus: "Pending",
   })
 
@@ -1187,6 +1190,9 @@ export default function AdminPage() {
       status: order.status,
       trackingNumber: order.trackingNumber || "",
       customerName: order.customer.name || "",
+      customerPhone: order.customer.phone || "",
+      customerEmail: order.customer.email || "",
+      customerAddress: order.customer.address || "",
       paymentStatus: order.paymentDetails?.paymentStatus || (order.paymentMethod === "Cash on Delivery" ? "Pending" : "Paid"),
     })
   }
@@ -3267,6 +3273,42 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="ord_cust_phone" className="text-xs font-semibold">
+                    Customer Phone
+                  </Label>
+                  <Input
+                    id="ord_cust_phone"
+                    value={orderStatusForm.customerPhone}
+                    onChange={(e) => setOrderStatusForm({ ...orderStatusForm, customerPhone: e.target.value })}
+                    placeholder="+91 9876543210"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="ord_cust_email" className="text-xs font-semibold">
+                    Customer Email
+                  </Label>
+                  <Input
+                    id="ord_cust_email"
+                    value={orderStatusForm.customerEmail}
+                    onChange={(e) => setOrderStatusForm({ ...orderStatusForm, customerEmail: e.target.value })}
+                    placeholder="customer@example.com"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="ord_cust_address" className="text-xs font-semibold">
+                    Customer Address
+                  </Label>
+                  <Input
+                    id="ord_cust_address"
+                    value={orderStatusForm.customerAddress}
+                    onChange={(e) => setOrderStatusForm({ ...orderStatusForm, customerAddress: e.target.value })}
+                    placeholder="Full shipping address"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5 col-span-2">
                   <Label htmlFor="ord_payment_status" className="text-xs font-semibold">
                     Payment Status
                   </Label>
