@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db"
+import { invalidateCache } from "@/lib/cache"
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -35,6 +36,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!result) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }
+
+    // Invalidate products cache
+    await invalidateCache("products")
 
     return NextResponse.json(result)
   } catch (error: any) {
