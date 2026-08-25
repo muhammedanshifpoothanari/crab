@@ -1074,7 +1074,7 @@ export default function AdminPage() {
       originalPrice: "",
       image: "",
       additionalImages: [],
-      category: "couples",
+      category: collections.length > 0 ? collections[0].id : "couples",
       details: "",
       featuresText: "",
       barcode: "",
@@ -2937,18 +2937,15 @@ export default function AdminPage() {
                     onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <option value="couples">Couples</option>
-                    <option value="superheroes">Superheroes</option>
-                    <option value="professionals">Professionals</option>
-                    <option value="wedding">Wedding</option>
-                    <option value="family">Family</option>
-                    <option value="hobbies">Hobbies</option>
-                    <option value="sports">Sports</option>
-                    <option value="music">Music</option>
-                    <option value="travel">Travel</option>
-                    <option value="pets">With Pets</option>
-                    <option value="vehicles">With Vehicles</option>
-                    <option value="fantasy">Fantasy</option>
+                    {collections.length > 0 ? (
+                      collections.map((col) => (
+                        <option key={col.id} value={col.id}>
+                          {col.name}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="couples">Couples (Default)</option>
+                    )}
                   </select>
                 </div>
 
