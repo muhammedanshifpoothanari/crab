@@ -1,35 +1,44 @@
 import { MongoClient } from "mongodb"
 
-const uri = process.env.MONGODB_URI
-if (!uri) {
-  throw new Error("Please add your MONGODB_URI to .env")
-}
+// Do NOT throw at module load time — that crashes next build on Vercel.
+// The check is deferred to connectToDatabase() which is called at request time.
+const uri = process.env.MONGODB_URI as string
 
 let client: MongoClient
-let clientPromise: Promise<MongoClient>
+let clientPromise: Promise<MongoClient> | null = null
 
-if (process.env.NODE_ENV === "development") {
-  // In development mode, use a global variable so that the value
-  // is preserved across module reloads caused by HMR (Hot Module Replacement).
-  const globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>
+function getClientPromise(): Promise<MongoClient> {
+  if (!uri) {
+    throw new Error(
+      "MONGODB_URI is not set. Add it to your Vercel project environment variables."
+    )
   }
 
-  if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri)
-    globalWithMongo._mongoClientPromise = client.connect()
+  if (process.env.NODE_ENV === "development") {
+    // In development, reuse across HMR reloads via a global
+    const globalWithMongo = global as typeof globalThis & {
+      _mongoClientPromise?: Promise<MongoClient>
+    }
+    if (!globalWithMongo._mongoClientPromise) {
+      client = new MongoClient(uri)
+      globalWithMongo._mongoClientPromise = client.connect()
+    }
+    return globalWithMongo._mongoClientPromise
+  } else {
+    // In production, create once per module instance
+    if (!clientPromise) {
+      client = new MongoClient(uri)
+      clientPromise = client.connect()
+    }
+    return clientPromise
   }
-  clientPromise = globalWithMongo._mongoClientPromise
-} else {
-  // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri)
-  clientPromise = client.connect()
 }
 
 export async function connectToDatabase() {
-  const conn = await clientPromise
+  const conn = await getClientPromise()
   const db = conn.db()
   return { client: conn, db }
 }
 
-export default clientPromise
+export default { getClientPromise }
+
