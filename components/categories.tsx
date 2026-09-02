@@ -5,27 +5,45 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import type { Product } from "@/lib/product-data"
 
+const COLLECTIONS_CACHE_KEY = "crabscart_collections_v1"
+const PRODUCTS_CACHE_KEY = "crabscart_products_v1"
+
 export function Categories() {
   const [products, setProducts] = useState<Product[]>([])
   const [collections, setCollections] = useState<{ id: string; name: string; icon: string; count: number; image?: string }[]>([])
 
   useEffect(() => {
-    // Fetch products
+    // ── Step 1: Restore from localStorage instantly ──
+    try {
+      const cachedProducts = localStorage.getItem(PRODUCTS_CACHE_KEY)
+      if (cachedProducts) {
+        const p = JSON.parse(cachedProducts)
+        if (Array.isArray(p)) setProducts(p)
+      }
+      const cachedCollections = localStorage.getItem(COLLECTIONS_CACHE_KEY)
+      if (cachedCollections) {
+        const c = JSON.parse(cachedCollections)
+        if (Array.isArray(c)) setCollections(c)
+      }
+    } catch (_) {}
+
+    // ── Step 2: Silently revalidate from API ──
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
           setProducts(data)
+          try { localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(data)) } catch (_) {}
         }
       })
       .catch((err) => console.error("Categories product fetch failed:", err))
 
-    // Fetch collections
     fetch("/api/collections")
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
           setCollections(data)
+          try { localStorage.setItem(COLLECTIONS_CACHE_KEY, JSON.stringify(data)) } catch (_) {}
         }
       })
       .catch((err) => console.error("Collections fetch failed:", err))

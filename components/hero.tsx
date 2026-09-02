@@ -63,6 +63,8 @@ const fallbackSlides: StaticSlide[] = [
   }
 ]
 
+const BANNERS_CACHE_KEY = "crabscart_banners_v1"
+
 export function Hero() {
   const [dbBanners, setDbBanners] = useState<DbBanner[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,6 +72,19 @@ export function Hero() {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
+    // ── Step 1: Serve from cache IMMEDIATELY (zero perceived lag) ──
+    try {
+      const cached = localStorage.getItem(BANNERS_CACHE_KEY)
+      if (cached) {
+        const parsed: DbBanner[] = JSON.parse(cached)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setDbBanners(parsed)
+          setLoading(false)
+        }
+      }
+    } catch (_) {}
+
+    // ── Step 2: Silently revalidate from API in background ──
     fetch("/api/banners")
       .then((res) => {
         if (res.ok) return res.json()
@@ -79,14 +94,19 @@ export function Hero() {
         if (Array.isArray(data)) {
           const active = data.filter((b) => b.isActive)
           setDbBanners(active)
+          setLoading(false)
+          // Update cache with fresh data so next visit is instant
+          try {
+            localStorage.setItem(BANNERS_CACHE_KEY, JSON.stringify(active))
+          } catch (_) {}
         }
-        setLoading(false)
       })
       .catch((err) => {
-        console.error("Hero banners load failed:", err)
+        console.error("Hero banners revalidation failed:", err)
         setLoading(false)
       })
   }, [])
+
 
   // Sync Carousel Index
   useEffect(() => {

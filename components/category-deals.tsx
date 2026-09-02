@@ -67,15 +67,20 @@ export function CategoryDeals() {
         }>
           {items.map((product) => {
             const isFav = !!favorites[product.id]
-            const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+            const discountPercentage =
+              product.originalPrice > product.price
+                ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+                : 0
             const pointsEarned = Math.round(product.price * 0.1)
 
             return (
               <div key={product.id} className="w-[170px] md:w-[220px] flex-shrink-0">
                 <Card className="group overflow-hidden border border-gray-100 bg-white rounded-2xl p-2.5 relative flex flex-col h-full hover:shadow-md transition-shadow duration-300">
-                  <span className="absolute top-4 left-4 z-10 px-2 py-0.5 text-[9px] font-black text-white bg-[#ec2652] rounded-md shadow-sm">
-                    {discountPercentage}% OFF
-                  </span>
+                  {discountPercentage > 0 && (
+                    <span className="absolute top-4 left-4 z-10 px-2 py-0.5 text-[9px] font-black text-white bg-[#ec2652] rounded-md shadow-sm">
+                      {discountPercentage}% OFF
+                    </span>
+                  )}
 
                   <button
                     onClick={(e) => handleFavoriteClick(product.id, e)}
@@ -99,10 +104,12 @@ export function CategoryDeals() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-[#eefcf9] border border-emerald-100 rounded-md text-[8px] font-bold text-emerald-600 w-fit">
-                      <Zap className="h-2 w-2 fill-emerald-500 text-emerald-500" />
-                      <span>+{pointsEarned} points</span>
-                    </div>
+                    {pointsEarned > 0 && (
+                      <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-[#eefcf9] border border-emerald-100 rounded-md text-[8px] font-bold text-emerald-600 w-fit">
+                        <Zap className="h-2 w-2 fill-emerald-500 text-emerald-500" />
+                        <span>+{pointsEarned} points</span>
+                      </div>
+                    )}
 
                     <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-gray-50">
                       <span className="text-xs font-black text-slate-800">₹{product.price}</span>

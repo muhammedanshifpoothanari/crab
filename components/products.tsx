@@ -64,17 +64,22 @@ export function Products() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {bestSellers.map((product) => {
             const isFav = !!favorites[product.id]
-            const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+            const discountPercentage =
+              product.originalPrice > product.price
+                ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+                : 0
             const pointsEarned = Math.round(product.price * 0.1) // 10% back in magicPoints
 
             return (
               <div key={product.id}>
                 <Card className="group overflow-hidden border border-gray-100 bg-white rounded-2xl p-2.5 relative flex flex-col h-full hover:shadow-md transition-shadow duration-300">
                   
-                  {/* Flat Discount Badge on top left of image */}
-                  <span className="absolute top-4 left-4 z-10 px-2 py-1 text-[10px] font-black text-white bg-[#ec2652] rounded-md shadow-sm">
-                    {discountPercentage}% OFF
-                  </span>
+                  {/* Flat Discount Badge — only shown when there is an actual discount */}
+                  {discountPercentage > 0 && (
+                    <span className="absolute top-4 left-4 z-10 px-2 py-1 text-[10px] font-black text-white bg-[#ec2652] rounded-md shadow-sm">
+                      {discountPercentage}% OFF
+                    </span>
+                  )}
 
                   {/* Favorite Button at top-right */}
                   <button
@@ -116,11 +121,13 @@ export function Products() {
                       </div>
                     </div>
 
-                    {/* Reward Points Badge */}
-                    <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-[#eefcf9] border border-emerald-100 rounded-md text-[9px] font-bold text-emerald-600 w-fit">
-                      <Zap className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
-                      <span>+{pointsEarned} magicPoints</span>
-                    </div>
+                    {/* Reward Points Badge — hidden when pointsEarned is 0 */}
+                    {pointsEarned > 0 && (
+                      <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-[#eefcf9] border border-emerald-100 rounded-md text-[9px] font-bold text-emerald-600 w-fit">
+                        <Zap className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
+                        <span>+{pointsEarned} magicPoints</span>
+                      </div>
+                    )}
 
                     <div className="flex items-baseline justify-between mt-2 pt-2 border-t border-gray-50">
                       <span className="text-xs font-black text-slate-800">₹{product.price}</span>

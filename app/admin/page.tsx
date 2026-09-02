@@ -3065,11 +3065,12 @@ export default function AdminPage() {
                 <Label htmlFor="prod_desc" className="text-xs font-semibold">
                   Short Description
                 </Label>
-                <Input
+                <Textarea
                   id="prod_desc"
                   value={productForm.description}
                   onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
                   placeholder="Classic personalized couple figurines styled in modern custom suits"
+                  className="bg-background/80 min-h-[70px] resize-none"
                 />
               </div>
 

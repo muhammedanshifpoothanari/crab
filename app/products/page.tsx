@@ -174,16 +174,21 @@ function ProductsContent() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {filteredProducts.map((product) => {
               const isFav = !!favorites[product.id]
-              const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+              const discountPercentage =
+                product.originalPrice > product.price
+                  ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+                  : 0
               const pointsEarned = Math.round(product.price * 0.1)
 
               return (
                 <Card key={product.id} className="group overflow-hidden border border-gray-100 bg-white rounded-2xl p-2.5 relative flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
                   <div className="relative">
-                    {/* Flat Discount Badge */}
-                    <span className="absolute top-2 left-2 z-10 px-1.5 py-0.5 text-[9px] font-black text-white bg-[#ec2652] rounded-md shadow-sm">
-                      {discountPercentage}% OFF
-                    </span>
+                    {/* Flat Discount Badge — only when there is a real discount */}
+                    {discountPercentage > 0 && (
+                      <span className="absolute top-2 left-2 z-10 px-1.5 py-0.5 text-[9px] font-black text-white bg-[#ec2652] rounded-md shadow-sm">
+                        {discountPercentage}% OFF
+                      </span>
+                    )}
 
                     {/* Favorite Button */}
                     <button
@@ -203,12 +208,12 @@ function ProductsContent() {
                       />
                     </Link>
 
-                    {/* Title & Description */}
+                    {/* Title & Description — clamped to keep all cards uniform height */}
                     <Link href={`/product/${product.id}`} className="text-left block">
-                      <h3 className="text-xs font-extrabold text-slate-800 group-hover:text-[#ec2652] transition-colors line-clamp-1">
+                      <h3 className="text-xs font-extrabold text-slate-800 group-hover:text-[#ec2652] transition-colors line-clamp-2 min-h-[2.5rem]">
                         {product.name}
                       </h3>
-                      <p className="text-[10px] text-gray-400 font-semibold line-clamp-1 mt-0.5">
+                      <p className="text-[10px] text-gray-400 font-semibold line-clamp-2 mt-0.5 min-h-[2rem]">
                         {product.description}
                       </p>
                     </Link>
@@ -218,10 +223,12 @@ function ProductsContent() {
                       <span className="text-[9px] text-gray-500 font-bold">4.8</span>
                     </div>
 
-                    <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-[#eefcf9] border border-emerald-100 rounded-md text-[8px] font-bold text-emerald-600 w-fit">
-                      <Zap className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
-                      <span>+{pointsEarned} magicPoints</span>
-                    </div>
+                    {pointsEarned > 0 && (
+                      <div className="flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-[#eefcf9] border border-emerald-100 rounded-md text-[8px] font-bold text-emerald-600 w-fit">
+                        <Zap className="h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
+                        <span>+{pointsEarned} magicPoints</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-3">
