@@ -55,7 +55,7 @@ export function FooterPromo() {
             </div>
             <div>
               <h3 className="text-base md:text-lg font-black text-slate-800">
-                Unlock 100% Cashbacks on the App!
+                Unlock 10% Cashbacks on the App!
               </h3>
               <p className="text-xs md:text-sm text-slate-600 mt-0.5 font-semibold">
                 Scan bills, claim exclusive local merchant vouchers, and redeem rewards daily.
