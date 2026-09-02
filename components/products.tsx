@@ -59,8 +59,8 @@ export function Products() {
           </Link>
         </div>
 
-        {/* Magicpin Voucher list — vertical scroll */}
-        <div className="h-[720px] overflow-y-auto scrollbar-none pr-1">
+        {/* Magicpin Voucher list — total page scroll instead of internal scroll */}
+        <div className="w-full">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {bestSellers.map((product) => {
             const isFav = !!favorites[product.id]
