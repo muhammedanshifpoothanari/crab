@@ -181,7 +181,7 @@ function ProductsContent() {
               const pointsEarned = Math.round(product.price * 0.1)
 
               return (
-                <Card key={product.id} className="group overflow-hidden border border-gray-100 bg-white rounded-2xl p-2.5 relative flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
+                <Card key={product.id} className="group overflow-hidden border border-gray-100 bg-white rounded-2xl p-2.5 relative flex flex-col hover:shadow-md transition-shadow duration-300">
                   <div className="relative">
                     {/* Flat Discount Badge — only when there is a real discount */}
                     {discountPercentage > 0 && (
@@ -208,12 +208,14 @@ function ProductsContent() {
                       />
                     </Link>
 
+                  {/* flex-1 so this section grows to fill the card */}
+                  <div className="flex-1 flex flex-col">
                     {/* Title & Description — clamped to keep all cards uniform height */}
                     <Link href={`/product/${product.id}`} className="text-left block">
                       <h3 className="text-xs font-extrabold text-slate-800 group-hover:text-[#ec2652] transition-colors line-clamp-2 min-h-[2.5rem]">
                         {product.name}
                       </h3>
-                      <p className="text-[10px] text-gray-400 font-semibold line-clamp-2 mt-0.5 min-h-[2rem]">
+                      <p className="text-[10px] text-gray-400 font-semibold line-clamp-1 mt-0.5">
                         {product.description}
                       </p>
                     </Link>
@@ -229,20 +231,22 @@ function ProductsContent() {
                         <span>+{pointsEarned} magicPoints</span>
                       </div>
                     )}
-                  </div>
 
-                  <div className="mt-3">
-                    <div className="flex items-baseline justify-between pt-2 border-t border-gray-50">
-                      <span className="text-xs font-black text-slate-800">₹{product.price}</span>
-                      <span className="text-[10px] text-gray-400 line-through">₹{product.originalPrice}</span>
+                    {/* mt-auto pins price+button to bottom */}
+                    <div className="mt-auto pt-2">
+                      <div className="flex items-baseline justify-between border-t border-gray-50 pt-2">
+                        <span className="text-xs font-black text-slate-800">₹{product.price}</span>
+                        {product.originalPrice > product.price && (
+                          <span className="text-[10px] text-gray-400 line-through">₹{product.originalPrice}</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="w-full mt-2 py-2 bg-[#ec2652] hover:bg-[#d41c45] text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors duration-300 cursor-pointer"
+                      >
+                        Buy Now
+                      </button>
                     </div>
-
-                    <button
-                      onClick={() => addToCart(product)}
-                      className="w-full mt-2 py-2 bg-[#ec2652] hover:bg-[#d41c45] text-white font-extrabold text-xs rounded-xl shadow-sm transition-colors duration-300 cursor-pointer"
-                    >
-                      Buy Now
-                    </button>
                   </div>
                 </Card>
               )
