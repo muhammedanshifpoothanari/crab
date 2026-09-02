@@ -182,23 +182,20 @@ function ProductsContent() {
 
               return (
                 <Card key={product.id} className="group overflow-hidden border border-gray-100 bg-white rounded-2xl p-2.5 relative flex flex-col hover:shadow-md transition-shadow duration-300">
+
+                  {/* Image area with badges */}
                   <div className="relative">
-                    {/* Flat Discount Badge — only when there is a real discount */}
                     {discountPercentage > 0 && (
                       <span className="absolute top-2 left-2 z-10 px-1.5 py-0.5 text-[9px] font-black text-white bg-[#ec2652] rounded-md shadow-sm">
                         {discountPercentage}% OFF
                       </span>
                     )}
-
-                    {/* Favorite Button */}
                     <button
                       onClick={(e) => handleFavoriteClick(product.id, e)}
                       className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/95 backdrop-blur-sm border border-gray-100 shadow-sm hover:scale-110 transition-transform duration-300 cursor-pointer"
                     >
                       <Heart className={`h-3 w-3 transition-colors ${isFav ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
                     </button>
-
-                    {/* Product Image */}
                     <Link href={`/product/${product.id}`} className="relative aspect-square w-full block overflow-hidden rounded-xl bg-gray-50 mb-3">
                       <Image
                         src={product.image || "/placeholder.svg"}
@@ -207,10 +204,10 @@ function ProductsContent() {
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     </Link>
+                  </div>
 
-                  {/* flex-1 so this section grows to fill the card */}
+                  {/* Text + button — flex-1 fills remaining height, mt-auto pins button to bottom */}
                   <div className="flex-1 flex flex-col">
-                    {/* Title & Description — clamped to keep all cards uniform height */}
                     <Link href={`/product/${product.id}`} className="text-left block">
                       <h3 className="text-xs font-extrabold text-slate-800 group-hover:text-[#ec2652] transition-colors line-clamp-2 min-h-[2.5rem]">
                         {product.name}
@@ -220,7 +217,7 @@ function ProductsContent() {
                       </p>
                     </Link>
 
-                    <div className="flex items-center gap-1 mt-1 text-left">
+                    <div className="flex items-center gap-1 mt-1">
                       <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
                       <span className="text-[9px] text-gray-500 font-bold">4.8</span>
                     </div>
@@ -232,7 +229,6 @@ function ProductsContent() {
                       </div>
                     )}
 
-                    {/* mt-auto pins price+button to bottom */}
                     <div className="mt-auto pt-2">
                       <div className="flex items-baseline justify-between border-t border-gray-50 pt-2">
                         <span className="text-xs font-black text-slate-800">₹{product.price}</span>
