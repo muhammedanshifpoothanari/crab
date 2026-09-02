@@ -45,7 +45,6 @@ export function CategoryDeals() {
 
   // Filter products by dynamic groups with dynamic even slices
   const diningDeals = getEvenSlice(products.filter((p) => p.category === "couples"), 8)
-  const fashionDeals = getEvenSlice(products.filter((p) => p.category === "superheroes" || p.category === "sports"), 8)
   const corporateDeals = getEvenSlice(products.filter((p) => p.category === "professionals"), 8)
 
   if (loading || products.length === 0) return null
@@ -130,7 +129,6 @@ export function CategoryDeals() {
     <section className="py-2 bg-white">
       <div className="container mx-auto px-4 max-w-7xl">
         {renderTrack("Best in Dining & Food Vouchers", diningDeals)}
-        {renderTrack("Top in Fashion & Active Vouchers", fashionDeals)}
         {renderTrack("Premium Corporate Gift Vouchers", corporateDeals)}
       </div>
     </section>

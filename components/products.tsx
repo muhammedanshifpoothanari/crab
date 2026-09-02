@@ -37,7 +37,7 @@ export function Products() {
     toggleFavorite(productId)
   }
 
-  const bestSellers = products.slice(0, 8)
+  const bestSellers = products
 
   if (loading) {
     return (
@@ -59,15 +59,16 @@ export function Products() {
           </Link>
         </div>
 
-        {/* Magicpin Voucher list */}
-        <div className="flex overflow-x-auto md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 pb-4 scrollbar-none">
+        {/* Magicpin Voucher list — vertical scroll */}
+        <div className="h-[720px] overflow-y-auto scrollbar-none pr-1">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {bestSellers.map((product) => {
             const isFav = !!favorites[product.id]
             const discountPercentage = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
             const pointsEarned = Math.round(product.price * 0.1) // 10% back in magicPoints
 
             return (
-              <div key={product.id} className="w-[180px] md:w-auto flex-shrink-0">
+              <div key={product.id}>
                 <Card className="group overflow-hidden border border-gray-100 bg-white rounded-2xl p-2.5 relative flex flex-col h-full hover:shadow-md transition-shadow duration-300">
                   
                   {/* Flat Discount Badge on top left of image */}
@@ -137,6 +138,7 @@ export function Products() {
               </div>
             )
           })}
+          </div>
         </div>
       </div>
     </section>

@@ -1093,7 +1093,9 @@ export default function AdminPage() {
       originalPrice: "",
       image: "",
       additionalImages: [],
-      category: collections.length > 0 ? collections[0].id : "couples",
+      // Always pick the first loaded collection; if not yet loaded, leave blank
+      // — the useEffect below will sync it once collections arrive
+      category: collections.length > 0 ? collections[0].id : "",
       details: "",
       featuresText: "",
       barcode: "",
@@ -1101,6 +1103,14 @@ export default function AdminPage() {
     })
     setShowProductModal(true)
   }
+
+  // Sync category when collections finish loading and form has no valid selection
+  // (covers the race between modal open and async collections fetch)
+  useEffect(() => {
+    if (collections.length > 0 && productForm.category === "") {
+      setProductForm((prev) => ({ ...prev, category: collections[0].id }))
+    }
+  }, [collections])
 
   // Update order status/tracking ID
   const handleOrderUpdate = async (e: React.FormEvent) => {
@@ -2963,6 +2973,12 @@ export default function AdminPage() {
                     onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
+                    {/* Placeholder shown when value doesn't match any option yet */}
+                    {(collections.length === 0 || !collections.find((c) => c.id === productForm.category)) && (
+                      <option value="" disabled>
+                        {collections.length === 0 ? "Loading categories…" : "— Select a category —"}
+                      </option>
+                    )}
                     {collections.length > 0 ? (
                       collections.map((col) => (
                         <option key={col.id} value={col.id}>
@@ -2970,7 +2986,13 @@ export default function AdminPage() {
                         </option>
                       ))
                     ) : (
-                      <option value="couples">Couples (Default)</option>
+                      <>
+                        <option value="couples">Couples</option>
+                        <option value="wedding">Wedding</option>
+                        <option value="superheroes">Superheroes</option>
+                        <option value="professionals">Professionals</option>
+                        <option value="family">Family</option>
+                      </>
                     )}
                   </select>
                 </div>
